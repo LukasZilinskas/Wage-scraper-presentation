@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlyginimų duomenų portalas — pristatymas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============ tokens (VLK portal palette) ============ */
+:root{
+  --p:#4a3aaa; --p-dark:#2e2280; --p-deep:#2a1f6e; --p-light:#6f5fce; --p-cont:#e3deff;
+  --bg:#f7f6fb; --surface:#ffffff; --surface-cont:#f0eef7;
+  --text:#0c0a2c; --muted:#5a5673; --faint:#8e8aa3; --border:#e3e1ed;
+  --success:#15803d; --success-bg:#dcfce7; --warning:#d97706; --warning-bg:#fef3c7;
+  --danger:#dc2626; --danger-bg:#fee2e2; --amber:#fbbf24;
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-xl:24px;
+  --shadow-lg:0 24px 60px rgba(12,10,44,.18), 0 6px 18px rgba(12,10,44,.10);
+  --shadow-md:0 10px 30px rgba(12,10,44,.12);
+  --ease:cubic-bezier(.22,.9,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);
+  font-family:'Inter',system-ui,sans-serif;color:var(--text);
+  -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Plus Jakarta Sans',sans-serif;margin:0}
+button{font-family:inherit;cursor:pointer}
+
+/* ============ deck shell ============ */
+.deck{position:fixed;inset:0}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:6vh 7vw;
+  opacity:0;visibility:hidden;transform:translateX(6vw);
+  transition:opacity .55s var(--ease),transform .55s var(--ease),visibility 0s .55s;
+}
+.slide.active{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+.slide.before{transform:translateX(-6vw)}
+
+/* background decor */
+.bgfx{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.bgfx::before{content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(900px 600px at 85% -10%, rgba(74,58,170,.10), transparent 60%),
+    radial-gradient(700px 500px at -10% 105%, rgba(111,95,206,.10), transparent 60%);}
+.bgfx .grid{position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(rgba(74,58,170,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(74,58,170,.045) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 40%,#000 30%,transparent 75%)}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:drift 26s ease-in-out infinite alternate}
+.blob.b1{width:44vw;height:44vw;left:-14vw;top:-18vw;background:#e3deff}
+.blob.b2{width:36vw;height:36vw;right:-10vw;bottom:-14vw;background:#ddeafe;animation-delay:-13s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(4vw,3vh) scale(1.08)}}
+
+/* top brand bar */
+.bar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;
+  gap:14px;padding:0 26px;z-index:20;
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border)}
+.bar .mark{width:26px;height:26px;border-radius:7px;background:var(--p);position:relative;flex:none}
+.bar .mark::after{content:"";position:absolute;inset:6px 6px 6px 12px;background:#fff;
+  clip-path:polygon(0 0,100% 28%,100% 100%,0 72%)}
+.bar .t{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;letter-spacing:-.01em}
+.bar .s{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.09em}
+.bar .n{margin-left:auto;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+/* progress + dots + arrows */
+.progress{position:fixed;left:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--p),var(--p-light));
+  width:0;z-index:30;transition:width .45s var(--ease)}
+.dots{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:25}
+.dots button{width:9px;height:9px;border-radius:50%;border:none;background:#c5c2d4;padding:0;
+  transition:transform .2s var(--ease),background .2s}
+.dots button.on{background:var(--p);transform:scale(1.45)}
+.dots button:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,58,170,.25)}
+.navbtn{position:fixed;top:50%;transform:translateY(-50%);z-index:25;width:46px;height:46px;
+  border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.9);
+  color:var(--p);display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-md);transition:background .2s,transform .2s var(--ease)}
+.navbtn:hover{background:var(--p-cont);transform:translateY(-50%) scale(1.06)}
+.navbtn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(74,58,170,.25),var(--shadow-md)}
+.navbtn.prev{left:22px}.navbtn.next{right:22px}
+.navbtn svg{width:20px;height:20px}
+
+/* ============ fragments (staggered reveals) ============ */
+.fr{opacity:0;transform:translateY(26px)}
+.slide.active .fr{animation:rise .7s var(--ease) forwards;animation-delay:calc(var(--d,0)*1ms)}
+@keyframes rise{to{opacity:1;transform:none}}
+.frL{opacity:0;transform:translateX(-30px)}
+.slide.active .frL{animation:riseL .7s var(--ease) forwards;animation-delay:calc(var(--d,0)*1ms)}
+@keyframes riseL{to{opacity:1;transform:none}}
+
+/* ============ shared slide elements ============ */
+.kicker{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--p)}
+.kicker.center{text-align:center}
+h1.hero{font-size:clamp(40px,5.6vw,76px);font-weight:800;letter-spacing:-.03em;line-height:1.04;
+  margin:18px 0 14px;text-align:center}
+h1.hero .grad{background:linear-gradient(100deg,var(--p-dark),var(--p) 45%,var(--p-light));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:clamp(15px,1.4vw,20px);color:var(--muted);max-width:760px;text-align:center;line-height:1.6;margin:0 auto}
+h2.title{font-size:clamp(26px,3vw,42px);font-weight:800;letter-spacing:-.02em;margin:10px 0 8px}
+.lede{font-size:clamp(14px,1.2vw,17px);color:var(--muted);line-height:1.6;max-width:880px}
+.lede strong{color:var(--text)}
+
+/* chips row on hero */
+.chips{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:34px}
+.chip{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);
+  border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:600;color:var(--muted);
+  box-shadow:0 2px 10px rgba(12,10,44,.06)}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--p)}
+.chip .dot.g{background:var(--success)}.chip .dot.a{background:var(--warning)}
+
+/* stat cards */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;width:min(1080px,90vw);margin-top:34px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:24px 22px 20px;box-shadow:0 6px 24px rgba(12,10,44,.07);position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--p)}
+.stat.g::before{background:var(--success)}.stat.a::before{background:var(--amber)}.stat.l::before{background:var(--p-light)}
+.stat .num{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(34px,3.4vw,52px);font-weight:800;
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05}
+.stat.g .num{color:var(--success)}.stat .num{color:var(--p-dark)}
+.stat .lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:8px}
+.stat .sub2{font-size:12.5px;color:var(--faint);margin-top:4px;line-height:1.45}
+
+/* feature cards */
+.feats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;width:min(1060px,90vw);margin-top:30px}
+.feat{display:flex;gap:18px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:24px;box-shadow:0 6px 24px rgba(12,10,44,.07);
+  transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+.feat:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.feat .ic{flex:none;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  background:var(--p-cont);color:var(--p-dark)}
+.feat .ic.g{background:var(--success-bg);color:var(--success)}
+.feat .ic.a{background:var(--warning-bg);color:var(--warning)}
+.feat .ic.r{background:var(--danger-bg);color:var(--danger)}
+.feat .ic svg{width:24px;height:24px}
+.feat h3{font-size:17px;font-weight:700;margin-bottom:6px;letter-spacing:-.01em}
+.feat p{margin:0;font-size:14px;color:var(--muted);line-height:1.6}
+
+/* ============ screenshot slides ============ */
+.shot-slide{flex-direction:row;gap:4vw;align-items:center;justify-content:center}
+.shot-copy{flex:0 0 30%;max-width:420px}
+.shot-copy ul{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:14px}
+.shot-copy li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:var(--muted);line-height:1.55}
+.shot-copy li strong{color:var(--text)}
+.shot-copy li .tick{flex:none;width:22px;height:22px;border-radius:50%;margin-top:1px;
+  background:var(--p-cont);color:var(--p-dark);display:flex;align-items:center;justify-content:center}
+.shot-copy li .tick svg{width:13px;height:13px}
+.browser{flex:1;max-width:62vw;background:var(--surface);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg);border:1px solid var(--border);overflow:hidden}
+.browser .chrome{display:flex;align-items:center;gap:10px;height:40px;padding:0 16px;
+  background:var(--surface-cont);border-bottom:1px solid var(--border)}
+.browser .chrome i{width:11px;height:11px;border-radius:50%;display:block}
+.browser .chrome i:nth-child(1){background:#f87171}.browser .chrome i:nth-child(2){background:var(--amber)}
+.browser .chrome i:nth-child(3){background:#34d399}
+.browser .url{margin-left:8px;flex:1;max-width:420px;background:var(--surface);border:1px solid var(--border);
+  border-radius:999px;font-size:11.5px;color:var(--faint);padding:4px 14px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.browser img{display:block;width:100%;height:auto}
+.slide.active .browser.fr{animation-name:shotIn}
+@keyframes shotIn{from{opacity:0;transform:translateY(34px) scale(.97)}to{opacity:1;transform:none}}
+
+/* ============ flow diagram ============ */
+.flow{display:flex;align-items:stretch;gap:0;width:min(1180px,92vw);margin-top:40px}
+.fstep{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;padding:0 10px}
+.fstep .fic{width:64px;height:64px;border-radius:20px;background:var(--surface);border:1px solid var(--border);
+  box-shadow:0 6px 20px rgba(12,10,44,.10);display:flex;align-items:center;justify-content:center;
+  color:var(--p-dark);position:relative;z-index:1}
+.fstep .fic.hl{background:var(--p);color:#fff;border-color:var(--p)}
+.fstep .fic svg{width:28px;height:28px}
+.fstep h3{font-size:15px;font-weight:700;margin:14px 0 6px}
+.fstep p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;max-width:190px}
+.fstep::after{content:"";position:absolute;top:32px;left:calc(50% + 40px);right:calc(-50% + 40px);
+  height:2px;background:repeating-linear-gradient(90deg,var(--p-light) 0 8px,transparent 8px 14px);opacity:.6}
+.fstep:last-child::after{display:none}
+
+/* status slide */
+.status-wrap{display:grid;grid-template-columns:1fr 1fr;gap:22px;width:min(1000px,90vw);margin-top:30px}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:26px;
+  box-shadow:0 6px 24px rgba(12,10,44,.07)}
+.scard h3{display:flex;align-items:center;gap:10px;font-size:16px;margin-bottom:14px}
+.scard h3 .b{width:10px;height:10px;border-radius:50%}
+.scard ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.scard li{font-size:14px;color:var(--muted);line-height:1.55;padding-left:18px;position:relative}
+.scard li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:50%;background:var(--p-light)}
+
+/* closing */
+.end-logo{width:78px;height:78px;border-radius:22px;background:var(--p);margin:0 auto 26px;position:relative;
+  box-shadow:0 16px 40px rgba(74,58,170,.35)}
+.end-logo::after{content:"";position:absolute;inset:18px 16px 18px 32px;background:#fff;
+  clip-path:polygon(0 0,100% 28%,100% 100%,0 72%)}
+kbd{background:var(--surface);border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;
+  padding:2px 8px;font-family:inherit;font-size:12px;color:var(--muted)}
+
+@media (max-width:1000px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .feats{grid-template-columns:1fr}
+  .shot-slide{flex-direction:column}
+  .shot-copy{flex:none;max-width:90vw}
+  .browser{max-width:90vw}
+  .flow{flex-wrap:wrap;gap:26px}
+  .fstep::after{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}
+  .fr,.frL{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="bgfx"><div class="blob b1"></div><div class="blob b2"></div><div class="grid"></div></div>
+
+<div class="bar">
+  <span class="mark" aria-hidden="true"></span>
+  <span class="t">Valstybinė ligonių kasa</span>
+  <span class="s">· Atlyginimų duomenų portalas</span>
+  <span class="n"><span id="cur">1</span> / <span id="tot">12</span></span>
+</div>
+
+<div class="deck" id="deck">
+
+<!-- 1 · Titulinis -->
+<section class="slide active">
+  <div class="kicker center fr" style="--d:100">Vidaus įrankis · 2026</div>
+  <h1 class="hero fr" style="--d:240">Atlyginimų<br><span class="grad">duomenų portalas</span></h1>
+  <p class="sub fr" style="--d:420">Viena vieta Lietuvos sveikatos priežiūros įstaigų atlyginimų
+    duomenims surinkti, patikrinti ir patvirtinti.</p>
+  <div class="chips">
+    <span class="chip fr" style="--d:620"><span class="dot"></span>163 įstaigos</span>
+    <span class="chip fr" style="--d:720"><span class="dot g"></span>4 duomenų šaltiniai</span>
+    <span class="chip fr" style="--d:820"><span class="dot a"></span>Automatinis surinkimas + AI patikra</span>
+  </div>
+</section>
+
+<!-- 2 · Problema -->
+<section class="slide">
+  <div class="kicker frL" style="--d:80">Kodėl to reikia?</div>
+  <h2 class="title frL" style="--d:180">Šimtai svetainių — vienas vaizdas</h2>
+  <p class="lede fr" style="--d:320">Įstaigos atlyginimų duomenis skelbia <strong>kas ketvirtį, kiekviena savaip</strong> —
+    lentelėse, PDF, „Word", „Excel" failuose ar net nuskenuotuose dokumentuose.
+    Rinkti juos rankomis — lėta ir klaidinga. Portalas šį darbą atlieka automatiškai
+    ir leidžia komandai matyti, taisyti bei tvirtinti rezultatą vienoje vietoje.</p>
+  <div class="stats-grid">
+    <div class="stat fr" style="--d:480"><div class="num" data-count="163">0</div>
+      <div class="lbl">Stebimos įstaigos</div><div class="sub2">visas registras</div></div>
+    <div class="stat l fr" style="--d:580"><div class="num" data-count="139">0</div>
+      <div class="lbl">Renkama automatiškai</div><div class="sub2">likusios — rankiniu įvedimu</div></div>
+    <div class="stat a fr" style="--d:680"><div class="num" data-count="12471">0</div>
+      <div class="lbl">Duomenų įrašai</div><div class="sub2">per 19 ataskaitinių laikotarpių</div></div>
+    <div class="stat g fr" style="--d:780"><div class="num" data-count="253">0</div>
+      <div class="lbl">Patvirtinti laikotarpiai</div><div class="sub2">paruošti analitikai</div></div>
+  </div>
+</section>
+
+<!-- 3 · Ką atlieka -->
+<section class="slide">
+  <div class="kicker frL" style="--d:80">Galimybės</div>
+  <h2 class="title frL" style="--d:180">Ką sistema atlieka?</h2>
+  <div class="feats">
+    <div class="feat fr" style="--d:340">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <div><h3>Automatiškai surenka</h3><p>Nuskaito atlyginimų duomenis iš ~139 įstaigų svetainių —
+        HTML lentelių, PDF, „Word", „Excel" ir net nuskenuotų dokumentų.</p></div>
+    </div>
+    <div class="feat fr" style="--d:460">
+      <span class="ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+      <div><h3>Leidžia peržiūrėti ir tvirtinti</h3><p>Darbuotojai mato duomenis šalia originalaus dokumento,
+        taiso klaidas ir vienu mygtuku patvirtina laikotarpį.</p></div>
+    </div>
+    <div class="feat fr" style="--d:580">
+      <span class="ic a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg></span>
+      <div><h3>Palygina su išorės šaltiniais</h3><p>Sutikrina surinktus skaičius su VLK, „Sodros" ir
+        Kompetencijų platformos duomenimis — neatitikimai pažymimi automatiškai.</p></div>
+    </div>
+    <div class="feat fr" style="--d:700">
+      <span class="ic r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+      <div><h3>AI patikra prieš tvirtinant</h3><p>Dirbtinis intelektas sutikrina kiekvieną skaičių su originaliu
+        dokumentu ir automatiškai patvirtina tik tuos, dėl kurių neabejojama.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · Apžvalga -->
+<section class="slide shot-slide">
+  <div class="shot-copy">
+    <div class="kicker frL" style="--d:80">Peržiūra</div>
+    <h2 class="title frL" style="--d:180">Apžvalgos skydelis</h2>
+    <ul>
+      <li class="frL" style="--d:320"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>„Kas naujo"</strong> — po kiekvieno surinkimo matyti, kiek atsirado naujų laikotarpių.</span></li>
+      <li class="frL" style="--d:440"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Pagrindiniai rodikliai</strong> — įstaigų aprėptis, vidutinis atlyginimas, patvirtinimo eiga.</span></li>
+      <li class="frL" style="--d:560"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Reitingai</strong> — didžiausi ir mažiausi vidutiniai atlyginimai pagal įstaigas.</span></li>
+    </ul>
+  </div>
+  <div class="browser fr" style="--d:260">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">portalas/view — apžvalga</span></div>
+    <img src="img/view_dashboard.png" alt="Apžvalgos skydelis: rodikliai, patvirtinimo būsena, reitingai">
+  </div>
+</section>
+
+<!-- 5 · Detalė -->
+<section class="slide shot-slide">
+  <div class="shot-copy">
+    <div class="kicker frL" style="--d:80">Peržiūra</div>
+    <h2 class="title frL" style="--d:180">Įstaigos kortelė</h2>
+    <ul>
+      <li class="frL" style="--d:320"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Duomenys šalia šaltinio</strong> — kairėje sistema, dešinėje originalus įstaigos dokumentas.</span></li>
+      <li class="frL" style="--d:440"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Pokyčių tendencija</strong> — atlyginimų kreivė per visus laikotarpius, palyginimas su praėjusiais metais.</span></li>
+      <li class="frL" style="--d:560"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Patvirtinimo žyma</strong> — iš karto aišku, ar duomenys jau peržiūrėti žmogaus.</span></li>
+    </ul>
+  </div>
+  <div class="browser fr" style="--d:260">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">portalas/view — Tauragės ligoninė · 2026 m. I ketvirtis</span></div>
+    <img src="img/view_detail.png" alt="Įstaigos detalė: rodikliai, tendencija, kategorijų lentelė">
+  </div>
+</section>
+
+<!-- 6 · Redagavimas -->
+<section class="slide shot-slide">
+  <div class="shot-copy">
+    <div class="kicker frL" style="--d:80">Redagavimas</div>
+    <h2 class="title frL" style="--d:180">Taisymas ir tvirtinimas</h2>
+    <ul>
+      <li class="frL" style="--d:320"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Taisoma tiesiai lentelėje</strong> — dukart spustelėjus langelį. Kiekvienas pakeitimas fiksuojamas istorijoje.</span></li>
+      <li class="frL" style="--d:440"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Žmogaus taisymai apsaugoti</strong> — vėlesnis automatinis surinkimas jų nebeperrašo,
+        tik įspėja, jei svetainėje skaičius pasikeitė.</span></li>
+      <li class="frL" style="--d:560"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>„Kita nepatvirtinta"</strong> — mygtukas veda per visas dėmesio laukiančias įstaigas iš eilės.</span></li>
+    </ul>
+  </div>
+  <div class="browser fr" style="--d:260">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">portalas/edit — redagavimas ir patvirtinimas</span></div>
+    <img src="img/edit.png" alt="Redagavimo puslapis: taisoma lentelė, AI patikra, patvirtinimas">
+  </div>
+</section>
+
+<!-- 7 · Palyginimas -->
+<section class="slide shot-slide">
+  <div class="shot-copy">
+    <div class="kicker frL" style="--d:80">Palyginimas</div>
+    <h2 class="title frL" style="--d:180">Sutikrinimas su išorės šaltiniais</h2>
+    <ul>
+      <li class="frL" style="--d:320"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Keturi šaltiniai vienoje lentelėje</strong> — VLK, surinkti duomenys, Kompetencijų platforma ir „Sodra".</span></li>
+      <li class="frL" style="--d:440"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Įtartinos eilutės paryškinamos</strong> — kai skirtumas viršija nustatytą ribą (10&nbsp;%).</span></li>
+      <li class="frL" style="--d:560"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Eksportas</strong> — bet kuris pjūvis parsisiunčiamas „Excel"/CSV formatu.</span></li>
+    </ul>
+  </div>
+  <div class="browser fr" style="--d:260">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">portalas/compare — VLK ↔ nuskaityta ↔ KP ↔ Sodra</span></div>
+    <img src="img/compare.png" alt="Palyginimo lentelė su pažymėtomis įtartinomis eilutėmis">
+  </div>
+</section>
+
+<!-- 8 · Patikra -->
+<section class="slide shot-slide">
+  <div class="shot-copy">
+    <div class="kicker frL" style="--d:80">Patikra</div>
+    <h2 class="title frL" style="--d:180">Pasitikėjimo reitingas</h2>
+    <ul>
+      <li class="frL" style="--d:320"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Visos įstaigos surikiuotos</strong> nuo labiausiai iki mažiausiai tikrintinų — blogiausios viršuje.</span></li>
+      <li class="frL" style="--d:440"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Spalvų juostos</strong> — žalia „gerai", geltona „tikslinti", raudona „tikrinti".
+        Komanda iš karto žino, kur žiūrėti pirmiausia.</span></li>
+      <li class="frL" style="--d:560"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Detalizacija</strong> — spustelėjus eilutę matomi skirtumai pagal darbuotojų grupes.</span></li>
+    </ul>
+  </div>
+  <div class="browser fr" style="--d:260">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">portalas/quality — pasitikėjimo reitingas</span></div>
+    <img src="img/quality.png" alt="Patikros puslapis: įstaigų reitingas pagal nuokrypį nuo VLK">
+  </div>
+</section>
+
+<!-- 9 · Šaltiniai -->
+<section class="slide shot-slide">
+  <div class="shot-copy">
+    <div class="kicker frL" style="--d:80">Šaltiniai</div>
+    <h2 class="title frL" style="--d:180">Visi šaltiniai greta</h2>
+    <ul>
+      <li class="frL" style="--d:320"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Viena įstaiga, vienas ketvirtis</strong> — VLK, surinkti, KP ir „Sodros" duomenys vienas po kito.</span></li>
+      <li class="frL" style="--d:440"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Pavyzdyje</strong> — Tauragės ligoninės surinkti skaičiai beveik idealiai sutampa su VLK
+        (566 darbuotojai, 1,5&nbsp;mln.&nbsp;€ fondas).</span></li>
+      <li class="frL" style="--d:560"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span><strong>Tyrimo įrankis</strong> — kai reikia išsiaiškinti konkretų neatitikimą.</span></li>
+    </ul>
+  </div>
+  <div class="browser fr" style="--d:260">
+    <div class="chrome"><i></i><i></i><i></i><span class="url">portalas/inspect — Tauragės ligoninė · 2026 K1</span></div>
+    <img src="img/inspect.png" alt="Šaltinių puslapis: VLK ir nuskaityti duomenys greta">
+  </div>
+</section>
+
+<!-- 10 · Kaip veikia -->
+<section class="slide">
+  <div class="kicker frL" style="--d:80">Procesas</div>
+  <h2 class="title frL" style="--d:180">Kaip tai veikia?</h2>
+  <div class="flow">
+    <div class="fstep fr" style="--d:320">
+      <span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20"/></svg></span>
+      <h3>Įstaigų svetainės</h3><p>139 įstaigos skelbia duomenis kas ketvirtį</p>
+    </div>
+    <div class="fstep fr" style="--d:470">
+      <span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg></span>
+      <h3>Automatinis surinkimas</h3><p>Sistema nuskaito lenteles, PDF, „Word", „Excel" ir skenuotus failus</p>
+    </div>
+    <div class="fstep fr" style="--d:620">
+      <span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+      <h3>AI patikra</h3><p>Skaičiai sutikrinami su originaliu dokumentu dviem nepriklausomais būdais</p>
+    </div>
+    <div class="fstep fr" style="--d:770">
+      <span class="fic hl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <h3>Žmogaus patvirtinimas</h3><p>Komanda peržiūri abejotinus atvejus ir patvirtina laikotarpius</p>
+    </div>
+    <div class="fstep fr" style="--d:920">
+      <span class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg></span>
+      <h3>Ataskaitos</h3><p>Patvirtinti duomenys eksportuojami analitikai ir „Excel" ataskaitoms</p>
+    </div>
+  </div>
+  <p class="lede fr" style="--d:1080; margin-top:34px; text-align:center">
+    Svarbiausia taisyklė — <strong>žmogus visada turi paskutinį žodį</strong>: automatika niekada neperrašo
+    darbuotojo pataisymų, o AI tvirtina tik tuos duomenis, dėl kurių neabejoja.</p>
+</section>
+
+<!-- 11 · Būklė -->
+<section class="slide">
+  <div class="kicker frL" style="--d:80">Statusas</div>
+  <h2 class="title frL" style="--d:180">Dabartinė būklė</h2>
+  <div class="status-wrap">
+    <div class="scard fr" style="--d:340">
+      <h3><span class="b" style="background:var(--success)"></span>Jau veikia</h3>
+      <ul>
+        <li>Sistema naudojama kasdieniame darbe — 253 laikotarpiai patvirtinti</li>
+        <li>Automatinis surinkimas iš ~139 įstaigų, įsk. skenuotus dokumentus</li>
+        <li>AI patikra su automatiniu tvirtinimu konservatyviu režimu</li>
+        <li>Palyginimas su VLK, „Sodros" ir KP duomenimis</li>
+      </ul>
+    </div>
+    <div class="scard fr" style="--d:480">
+      <h3><span class="b" style="background:var(--amber)"></span>Tobulinama</h3>
+      <ul>
+        <li>Surinkimo tikslumas sudėtingiausioms svetainėms (prastos kokybės skenai)</li>
+        <li>~24 įstaigos dar pildomos rankiniu būdu — siekiama automatizuoti daugiau</li>
+        <li>Numatytas perkėlimas iš vieno kompiuterio į vidinį tinklo serverį</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · Pabaiga -->
+<section class="slide">
+  <div class="end-logo fr" style="--d:120"></div>
+  <h2 class="title fr" style="--d:280; text-align:center">Klausimai?</h2>
+  <p class="sub fr" style="--d:420">Atlyginimų duomenų portalas · Valstybinė ligonių kasa<br>
+    <span style="font-size:13px;color:var(--faint)">Vidaus įrankis — demonstracija prieinama vidiniame tinkle</span></p>
+  <p class="fr" style="--d:560; margin-top:30px; font-size:13px; color:var(--faint); text-align:center">
+    Valdymas: <kbd>←</kbd> <kbd>→</kbd> arba pelės paspaudimai</p>
+</section>
+
+</div>
+
+<button class="navbtn prev" aria-label="Ankstesnė skaidrė"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+<button class="navbtn next" aria-label="Kita skaidrė"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+<div class="dots" id="dots" role="tablist" aria-label="Skaidrės"></div>
+<div class="progress" id="progress"></div>
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll(".slide")];
+  const dots = document.getElementById("dots");
+  const progress = document.getElementById("progress");
+  const cur = document.getElementById("cur"), tot = document.getElementById("tot");
+  let i = 0;
+  tot.textContent = slides.length;
+
+  slides.forEach((_, k) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-label", "Skaidrė " + (k + 1));
+    b.addEventListener("click", () => go(k));
+    dots.appendChild(b);
+  });
+  const dotBtns = [...dots.children];
+
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function animateCounters(slide) {
+    slide.querySelectorAll("[data-count]").forEach(el => {
+      const target = +el.dataset.count;
+      if (reduced) { el.textContent = target.toLocaleString("lt-LT"); return; }
+      const t0 = performance.now(), dur = 1300;
+      const tick = now => {
+        const p = Math.min(1, (now - t0) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased).toLocaleString("lt-LT");
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  }
+
+  function go(n) {
+    n = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => {
+      s.classList.toggle("active", k === n);
+      s.classList.toggle("before", k < n);
+    });
+    i = n;
+    cur.textContent = n + 1;
+    history.replaceState(null, "", "#" + (n + 1));
+    progress.style.width = ((n + 1) / slides.length * 100) + "%";
+    dotBtns.forEach((d, k) => d.classList.toggle("on", k === n));
+    // restart fragment animations
+    const s = slides[n];
+    s.querySelectorAll(".fr,.frL").forEach(f => {
+      f.style.animation = "none"; void f.offsetWidth; f.style.animation = "";
+    });
+    animateCounters(s);
+  }
+
+  document.querySelector(".navbtn.next").addEventListener("click", () => go(i + 1));
+  document.querySelector(".navbtn.prev").addEventListener("click", () => go(i - 1));
+  addEventListener("keydown", e => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    else if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); go(i - 1); }
+    else if (e.key === "Home") go(0);
+    else if (e.key === "End") go(slides.length - 1);
+  });
+  // touch swipe
+  let x0 = null;
+  addEventListener("touchstart", e => x0 = e.touches[0].clientX, { passive: true });
+  addEventListener("touchend", e => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 60) go(i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  }, { passive: true });
+
+  const start = Math.max(1, Math.min(slides.length, parseInt(location.hash.slice(1)) || 1)) - 1;
+  go(start);
+})();
+</script>
+</body>
+</html>
