@@ -88,7 +88,7 @@ function renderInd(){
 }
 $("selI").onchange=()=>sync("selI");
 const niceStep=r=>{const e=Math.pow(10,Math.floor(Math.log10(r))),f=r/e;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
-function ticks(max,cnt){const s=niceStep(max/cnt),a=[];for(let v=0;v<=max+s*.999;v+=s)a.push(+v.toFixed(6));return a}
+function ticks(max,cnt){if(!(max>0))max=1;const s=niceStep(max/cnt),a=[];for(let v=0;v<=max+s*.999;v+=s)a.push(+v.toFixed(6));return a}
 function scatter(i,rows){
   rows=rows.filter(r=>r.v!=null&&r.g!=null);
   if(!rows.length)return `<div class="empty">Pasirinktai prisirašymo įstaigai duomenų nėra.</div>`;
