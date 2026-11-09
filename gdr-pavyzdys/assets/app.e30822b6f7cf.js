@@ -16,6 +16,8 @@ show(location.hash.slice(1));addEventListener("load",()=>window.scrollTo(0,0));
 const eur=v=>Number(v).toLocaleString("lt-LT",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
 $("title").textContent=D.name;
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+// teksto plotis SVG vienetais (veikia ir paslėptame skirtuke); be canvas – atsarginis įvertis
+const textW=(s,font)=>{try{const c=textW.c||(textW.c=document.createElement("canvas").getContext("2d"));c.font=`${font} ${getComputedStyle(document.body).fontFamily}`;return c.measureText(s).width}catch(e){return s.length*8}};
 // tooltip atributas: antraštė (HTML), eilutės [pavadinimas, reikšmė], spalva
 const tp=(head,rows,c)=>`data-tip="${esc(`<b>${head.replace(/<\/?b>/g,"")}</b>`+rows.map(r=>r[0]?`<div class="r"><span>${r[0]}</span><em>${r[1]}</em></div>`:`<div class="n">${r[1]}</div>`).join(""))}" data-c="${c||""}"`;
 const tipEl=document.createElement("div");tipEl.className="tip";document.body.appendChild(tipEl);
@@ -110,7 +112,9 @@ function scatter(i,rows){
 }
 D.indicators.forEach((i,k)=>{if(D.apyl[i.nr])$("selO").add(new Option(i.name,k))});
 function renderOv(){
-  const i=D.indicators[$("selO").value],f=D.apyl[i.nr][0];
+  const i=D.indicators[$("selO").value];
+  if(!i)return;  // įstaiga be apylinkių duomenų – kiti skirtukai turi veikti
+  const f=D.apyl[i.nr][0];
   const all=D.apyl[i.nr].map(r=>({a:r.a,pc:r.pc??"–",v:r.val,g:r.tg}));
   // prisirašymo įstaigų filtras: numatyta – visos; pasirinkimas išlaikomas keičiant rodiklį, jei toks kodas yra
   const sp=$("selP"),prev=sp.value||"*",codes=[...new Set(all.map(r=>r.pc))].sort((a,b)=>a.localeCompare(b,"lt",{numeric:true}));
@@ -158,10 +162,15 @@ function countryChart(i){
   }).join("");
   let me="";
   if(last!=null&&i.tg>0){
-    const cx=x(i.tg),cy=y(last),lbl=`${D.name}: ${fmt(last)}`,right=cx+14+lbl.length*7.3<W-P.r,ty=ry.some(r=>Math.abs(r-(cy-16))<10)?cy+24:cy-12;
+    // etiketė: dešinėje nuo taško, jei netelpa – kairėje, jei ir ten netelpa – virš taško (ilgi pavadinimai)
+    const cx=x(i.tg),cy=y(last),lbl=`${D.name}: ${fmt(last)}`,w=textW(lbl,"700 13px"),clash=v=>v<P.t+12||ry.some(r=>Math.abs(r-(v-4))<10);
+    let tx,ty;
+    if(cx+14+w<=W-P.r||cx-14-w>=P.l){tx=cx+14+w<=W-P.r?cx+14:cx-14-w;ty=clash(cy-12)?cy+24:cy-12}
+    else{tx=Math.max(4,Math.min(cx-w/2,W-P.r-w));ty=clash(cy-18)?cy+30:cy-18}
     me=`<line x1="${cx}" x2="${cx}" y1="${cy}" y2="${H-P.b}" stroke="#220083" stroke-width="1" stroke-dasharray="2 3"/>
+    <line x1="${P.l}" x2="${cx}" y1="${cy}" y2="${cy}" stroke="#220083" stroke-width="1" stroke-dasharray="2 3"/>
     <circle cx="${cx}" cy="${cy}" r="8" fill="#220083" stroke="#fff" stroke-width="2.5" ${tp(`<b>${esc(D.name)}</b>`,[["Rodiklio reikšmė",fmt(last)],["Tikslinė grupė",nf(i.tg)]],"#220083")}/>
-    <text x="${right?cx+14:cx-14}" y="${ty}" font-size="13" font-weight="700" text-anchor="${right?"start":"end"}" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${esc(lbl)}</text>`;
+    <text x="${tx}" y="${ty}" font-size="13" font-weight="700" text-anchor="start" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${esc(lbl)}</text>`;
   }
   const one=n=>n%10===1&&n%100!==11,gen=n=>one(n)?"įstaigos":"įstaigų";
   const note=[];
