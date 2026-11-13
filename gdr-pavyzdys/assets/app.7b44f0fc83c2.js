@@ -87,15 +87,16 @@ $("selI").onchange=()=>sync("selI");
 const niceStep=r=>{const e=Math.pow(10,Math.floor(Math.log10(r))),f=r/e;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
 function ticks(max,cnt){if(!(max>0))max=1;const s=niceStep(max/cnt),a=[];for(let v=0;v<=max+s*.999;v+=s)a.push(+v.toFixed(6));return a}
 // Tikslų linijos ir zona – vienodai visuose grafikuose:
-// 2027 m. tikslas ištisinis (nuo jo priklauso mokėjimas), 2028–2029 m. brūkšniniai, šalies reikšmė pilka taškinė;
-// žalsva zona – sritis, kurioje 2027 m. tikslas pasiektas (pagal rodiklio kryptį).
+// 2027 m. tikslas ištisinis (nuo jo priklauso mokėjimas), 2028 m. – šviesi trumpų brūkšnių, 2029 m. – ilgų brūkšnių,
+// šalies reikšmė pilka taškinė; žalsva zona – sritis, kurioje 2027 m. tikslas pasiektas (pagal rodiklio kryptį).
 function targetLines(t,y,P,W,H){
-  const L=[[t.t27,"2027 m. tikslas","",2,1],[t.t28,"2028 m. tikslas","6 5",1.5,0],[t.t29,"2029 m. tikslas","6 5",1.5,0],[t.country,"Šalies reikšmė","2 4",1.5,0]].filter(r=>r[0]!=null);
+  // [reikšmė, pavadinimas, brūkšniai, storis, paryškinta, linijos spalva, etiketės spalva]
+  const L=[[t.t27,"2027 m. tikslas","",2,1,"#645DC0","#220083"],[t.t28,"2028 m. tikslas","4 4",1.5,0,"#A39BE6","#220083"],
+    [t.t29,"2029 m. tikslas","14 5",1.5,0,"#645DC0","#220083"],[t.country,"Šalies reikšmė","2 4",1.5,0,"#8A87A8","#6B6890"]].filter(r=>r[0]!=null);
   const top=P.t,bot=H-P.b,ry=L.map(r=>Math.max(top,Math.min(bot,y(r[0])))),ord=L.map((r,k)=>k).sort((a,b)=>ry[a]-ry[b]),ly={},G=14;
   ord.forEach((k,j)=>{ly[k]=j?Math.max(ry[k],ly[ord[j-1]]+G):ry[k]});
   for(let j=ord.length-1;j>=0;j--){const lim=j===ord.length-1?bot+6:ly[ord[j+1]]-G;if(ly[ord[j]]>lim)ly[ord[j]]=lim}
-  const lines=L.map((r,k)=>{const c=r[1]==="Šalies reikšmė"?"#8A87A8":"#645DC0";
-    return `<line x1="${P.l}" x2="${W-P.r}" y1="${ry[k]}" y2="${ry[k]}" stroke="${c}" stroke-width="${r[3]}" ${r[2]?`stroke-dasharray="${r[2]}"`:""}/><text x="${W-P.r+8}" y="${ly[k]+4}" font-size="12" fill="${c==="#8A87A8"?"#6B6890":"#220083"}" ${r[4]?'font-weight="700"':""}>${r[1]}: ${fmt(r[0])}</text>`}).join("");
+  const lines=L.map((r,k)=>`<line x1="${P.l}" x2="${W-P.r}" y1="${ry[k]}" y2="${ry[k]}" stroke="${r[5]}" stroke-width="${r[3]}" ${r[2]?`stroke-dasharray="${r[2]}"`:""}/><text x="${W-P.r+8}" y="${ly[k]+4}" font-size="12" fill="${r[6]}" ${r[4]?'font-weight="700"':""}>${r[1]}: ${fmt(r[0])}</text>`).join("");
   let zone="";
   if(t.t27!=null){
     const yt=Math.max(top,Math.min(bot,y(t.t27))),zy=t.lower?yt:top,zh=Math.max(0,t.lower?bot-yt:yt-top);
