@@ -21,3 +21,31 @@ svg.ch{width:100%;height:auto;display:block;margin-top:8px}
 .empty.sm{padding:18px 0 6px;font-size:14px}
 @media(max-width:900px){#out{grid-template-columns:1fr}}
 @media(max-width:600px){.ac{padding:14px}.ac .ph{flex-direction:column;align-items:flex-start;gap:8px}.ac .badge{white-space:normal}}
+/* didinimo mygtukas ir padidintas rodiklis */
+.ac{position:relative}
+.ac .ph{padding-right:44px}
+.zb{position:absolute;top:12px;right:12px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--violet);cursor:pointer;padding:0}
+.zb:hover{background:var(--lav)}
+.zb svg{width:16px;height:16px}
+.zb.x{width:40px;height:40px;top:14px;right:14px}
+.zb.x svg{width:18px;height:18px}
+.zm{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:24px}
+.zm[hidden]{display:none}
+.zbg{position:absolute;inset:0;background:rgba(20,10,60,.45)}
+.zc{position:relative;width:100%;max-width:1120px;max-height:100%;overflow:auto;border-radius:16px}
+.zc .ac{padding:22px 26px 16px;border:0;box-shadow:0 20px 60px rgba(34,0,131,.3)}
+.zc .ac .ph{padding-right:56px}
+.zc .ac .ph b{font-size:20px}
+.zc svg.ch{max-height:calc(100vh - 220px)}
+body.noscroll{overflow:hidden}
+svg.ch .pt{cursor:pointer}
+svg.ch .pt:hover{fill-opacity:1;stroke:#220083;stroke-width:1.5}
+/* lentelė */
+.tblw{margin-top:36px}
+.tf{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;padding:0 15px;margin-bottom:14px}
+.tf label{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+.tf>div[hidden]{display:none}
+table.t tr.grp td{background:var(--lav);color:var(--violet);font-weight:700;font-size:15px;text-align:left;white-space:normal;padding:12px;border-top:12px solid #fff}
+table.t td a{color:var(--violet);font-weight:600}
+table.t td.none{text-align:center;color:var(--mut);padding:22px}
+@media(max-width:700px){.tf{grid-template-columns:1fr}.zm{padding:0}.zc{border-radius:0;height:100%;background:#fff}.zc .ac{box-shadow:none;border-radius:0}}
