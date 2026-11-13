@@ -59,7 +59,7 @@ const status=(v,t27,t29,low)=>{
 };
 D.indicators.forEach((i,k)=>$("selI").add(new Option(i.name,k)));
 function lineChart(i){
-  const W=900,H=170,P={l:40,r:150,t:22,b:28},n=D.quarters.length;
+  const W=900,H=170,P={l:40,r:180,t:22,b:28},n=D.quarters.length;
   const pv=i.vals.map((t,k)=>({t,k})).filter(p=>p.t!=null);
   const all=pv.map(p=>p.t).concat([i.t27,i.t28,i.t29,i.country].filter(v=>v!=null)),mn=Math.min(...all),mx=Math.max(...all),pad=(mx-mn)*.2||1,lo=mn-pad,hi=mx+pad;
   const x=k=>P.l+k*(W-P.l-P.r)/(n-1),y=t=>P.t+(hi-t)*(H-P.t-P.b)/(hi-lo);
@@ -96,7 +96,11 @@ function targetLines(t,y,P,W,H){
   const top=P.t,bot=H-P.b,ry=L.map(r=>Math.max(top,Math.min(bot,y(r[0])))),ord=L.map((r,k)=>k).sort((a,b)=>ry[a]-ry[b]),ly={},G=14;
   ord.forEach((k,j)=>{ly[k]=j?Math.max(ry[k],ly[ord[j-1]]+G):ry[k]});
   for(let j=ord.length-1;j>=0;j--){const lim=j===ord.length-1?bot+6:ly[ord[j+1]]-G;if(ly[ord[j]]>lim)ly[ord[j]]=lim}
-  const lines=L.map((r,k)=>`<line x1="${P.l}" x2="${W-P.r}" y1="${ry[k]}" y2="${ry[k]}" stroke="${r[5]}" stroke-width="${r[3]}" ${r[2]?`stroke-dasharray="${r[2]}"`:""}/><text x="${W-P.r+8}" y="${ly[k]+4}" font-size="12" fill="${r[6]}" ${r[4]?'font-weight="700"':""}>${r[1]}: ${fmt(r[0])}</text>`).join("");
+  // linija tęsiasi už grafiko ir (jei etiketė pastumta) palinksta iki savo etiketės – aišku, kuri etiketė kurios linijos
+  const R=W-P.r;
+  const lines=L.map((r,k)=>{const st=`stroke="${r[5]}" stroke-width="${r[3]}" ${r[2]?`stroke-dasharray="${r[2]}"`:""}`;
+    return `<line x1="${P.l}" x2="${R}" y1="${ry[k]}" y2="${ry[k]}" ${st}/><polyline points="${R},${ry[k]} ${R+8},${ly[k]} ${R+28},${ly[k]}" fill="none" ${st}/>`
+      +`<text x="${R+34}" y="${ly[k]+4}" font-size="12" fill="${r[6]}" ${r[4]?'font-weight="700"':""}>${r[1]}: ${fmt(r[0])}</text>`}).join("");
   let zone="";
   if(t.t27!=null){
     const yt=Math.max(top,Math.min(bot,y(t.t27))),zy=t.lower?yt:top,zh=Math.max(0,t.lower?bot-yt:yt-top);
@@ -108,7 +112,7 @@ function scatter(i,rows){
   rows=rows.filter(r=>r.v!=null&&r.g!=null);
   if(!rows.length)return `<div class="empty">Pasirinktai prisirašymo įstaigai duomenų nėra.</div>`;
   const f=D.apyl[i.nr][0],t27=f.t27,t28=f.t28,t29=f.t29,tg={t27,t28,t29,country:i.country,lower:i.lower};
-  const W=900,H=360,P={l:60,r:150,t:14,b:52};
+  const W=900,H=360,P={l:60,r:180,t:14,b:52};
   // Y skalė: pavienės išskirtys (>1,5 karto virš 90-ojo procentilio ir tikslų) žymimos ▲ viršuje, kad tikslų linijos nesusispaustų
   const vs=rows.map(r=>r.v).sort((a,b)=>a-b),tmax=Math.max(0,...[t27,t28,t29,i.country].filter(v=>v!=null));
   const ytop=Math.min(vs[vs.length-1],Math.max(vs[Math.floor((vs.length-1)*.9)],tmax)*1.5);
@@ -159,7 +163,7 @@ D.indicators.forEach((i,k)=>$("selC").add(new Option(i.name,k)));
 function countryChart(i){
   const last=[...i.vals].reverse().find(v=>v!=null);
   const pe=(D.peers[i.nr]||[]).filter(p=>p[0]>0&&p[1]!=null);
-  const W=900,H=380,P={l:60,r:150,t:20,b:56};
+  const W=900,H=380,P={l:60,r:180,t:20,b:56};
   // abi ašys ribojamos ties 97-uoju procentiliu, kad pavienės išskirtys nesuspaustų grafiko
   const q97=a=>{const s=[...a].sort((p,q)=>p-q);return s.length?s[Math.floor((s.length-1)*.97)]:0};
   const xt=ticks(Math.max(q97(pe.map(p=>p[0])),i.tg??0)*1.05,6),xmax=xt[xt.length-1];
