@@ -5,7 +5,6 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const fmt=(v,d=2)=>v==null?"–":Number(v).toLocaleString("lt-LT",{minimumFractionDigits:Number.isInteger(v)?0:d,maximumFractionDigits:d});
 const nf=v=>v==null?"–":Number(v).toLocaleString("lt-LT",{maximumFractionDigits:0});
-const sgn=v=>(v>0?"+":v<0?"−":"")+fmt(Math.abs(v));
 const textW=(s,font)=>{try{const c=textW.c||(textW.c=document.createElement("canvas").getContext("2d"));c.font=`${font} ${getComputedStyle(document.body).fontFamily}`;return c.measureText(s).width}catch(e){return s.length*7}};
 const niceStep=r=>{const e=Math.pow(10,Math.floor(Math.log10(r))),f=r/e;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
 function ticks(max,cnt){if(!(max>0))max=1;const s=niceStep(max/cnt),a=[];for(let v=0;v<=max+s*.999;v+=s)a.push(+v.toFixed(6));return a}
@@ -77,44 +76,49 @@ function card({i,rows,r,inst}){
     <div class="empty sm">${zero(i)?"Apylinkės tikslinė grupė šiam rodikliui lygi 0, todėl reikšmė nevertinama.":"Šiam rodikliui apylinkės duomenų nėra."} Įstaigos reikšmė (${instQ}): <b>${fmt(inst)}</b>.</div></div>`;
   const s=status(r.val,r.t27,r.t29,i.lower);
   const ord=[...rows].sort((p,q)=>i.lower?p.val-q.val:q.val-p.val),rank=ord.findIndex(x=>key(x)===key(r))+1;
-  const cmp=[["2027 m. tikslas",r.t27,1],["2028 m. tikslas",r.t28,1],["2029 m. tikslas",r.t29,1],[`Įstaigos reikšmė (${instQ})`,inst,0],["Šalies reikšmė",i.country,0]]
-    .filter(c=>c[1]!=null).map(([l,v,isT])=>{
-      const d=r.val-v,ok=isT?reached(r.val,v,i.lower):better(r.val,v,i.lower)||d===0;
-      const b=isT?(ok?`<span class="badge ok">Pasiektas</span>`:`<span class="badge bad">Trūksta ${fmt(Math.abs(d))}</span>`)
-                 :(d===0?`<span class="badge na">Lygi</span>`:ok?`<span class="badge ok">Geresnė</span>`:`<span class="badge bad">Blogesnė</span>`);
-      return `<tr><td>${l}</td><td>${fmt(v)}</td><td class="g">${sgn(d)}</td><td>${b}</td></tr>`}).join("");
+  // kiek trūksta iki kiekvieno tikslo – viena trumpa eilutė
+  const gaps=[["2027",r.t27],["2028",r.t28],["2029",r.t29]].filter(g=>g[1]!=null)
+    .map(([y,t])=>reached(r.val,t,i.lower)?`<span class="gp ok">${y} m. – pasiektas</span>`:`<span class="gp bad">${y} m. – trūksta ${fmt(Math.abs(r.val-t))}</span>`).join("");
   return `<div class="ac"><div class="ph"><div><b>${i.name}</b><div class="s">${dir}</div></div><span class="badge ${s.c}">${s.t}</span></div>
-    <div class="ag"><div><div class="big">${fmt(r.val)}<small>Apylinkė ${esc(r.a)} · ${D.apylPeriod}</small></div>
-      <div class="meta">Tikslinė grupė: <b>${nf(r.tg)}</b> · vieta tarp įstaigos apylinkių: <b>${rank}</b> iš ${rows.length}</div></div>
-      <div class="tw"><table class="t cmp"><tr><th>Palyginimas</th><th>Reikšmė</th><th>Skirtumas</th><th>Vertinimas</th></tr>${cmp}</table></div></div>
-    ${strip(i,rows,r,inst)}</div>`;
+    <div class="big">${fmt(r.val)}<small>Apylinkė ${esc(r.a)} · ${D.apylPeriod}</small></div>
+    <div class="meta">Tikslinė grupė: <b>${nf(r.tg)}</b> · vieta tarp įstaigos apylinkių: <b>${rank}</b> iš ${rows.length}</div>
+    <div class="gaps">${gaps}</div>
+    ${chart(i,rows,r,inst)}</div>`;
 }
 
-// juostinis grafikas: X – rodiklio reikšmė; taškai – įstaigos apylinkės, didelis – pasirinkta;
-// vertikalios linijos – tikslai, įstaigos ir šalies reikšmės; žalsva sritis – 2027 m. tikslas pasiektas
-function strip(i,rows,r,inst){
-  const W=900,H=164,P={l:24,r:28,t:58,b:30},mid=(P.t+H-P.b)/2;
-  const refs=[[r.t27,"2027 m.","","#645DC0",2],[r.t28,"2028 m.","6 5","#645DC0",1.5],[r.t29,"2029 m.","6 5","#645DC0",1.5],
-              [i.country,"Šalis","2 4","#8A87A8",1.5],[inst,"Įstaiga","2 4","#220083",1.5]].filter(x=>x[0]!=null);
+// Grafikas: Y – rodiklio reikšmė, X – tikslinė grupė (kaip „Apylinkių palyginime“);
+// horizontalios linijos – tikslai, įstaigos ir šalies reikšmės; linija nueina iki savo etiketės dešinėje.
+function chart(i,rows,r,inst){
+  const W=560,H=440,P={l:58,r:142,t:16,b:54};
+  const L=[[r.t27,"2027 m.","",2,1,"#645DC0","#220083"],[r.t28,"2028 m.","6 5",1.5,0,"#645DC0","#220083"],[r.t29,"2029 m.","6 5",1.5,0,"#645DC0","#220083"],
+           [i.country,"Šalis","2 4",1.5,0,"#8A87A8","#6B6890"],[inst,"Įstaiga","2 4",1.5,0,"#220083","#220083"]].filter(x=>x[0]!=null);
   const vs=rows.map(x=>x.val).sort((a,b)=>a-b),q90=vs[Math.floor((vs.length-1)*.9)];
-  const need=Math.max(r.val,...refs.map(x=>x[0]));
-  const xt=ticks(Math.max(need,Math.min(vs[vs.length-1],Math.max(q90,need)*1.5))*1.05,6),xm=xt[xt.length-1];
-  const x=v=>P.l+Math.min(v,xm)/xm*(W-P.l-P.r);
+  const need=Math.max(r.val,...L.map(x=>x[0]));
+  const yt=ticks(Math.max(need,Math.min(vs[vs.length-1],Math.max(q90,need)*1.5))*1.08,6),ym=yt[yt.length-1];
+  const xt=ticks(Math.max(...rows.map(o=>o.tg))*1.05,4),xm=xt[xt.length-1];
+  const x=v=>P.l+Math.min(v,xm)/xm*(W-P.l-P.r),y=v=>H-P.b-Math.min(v,ym)/ym*(H-P.t-P.b),R=W-P.r,top=P.t,bot=H-P.b;
   let zone="";
-  if(r.t27!=null){const xt27=x(r.t27);zone=i.lower?`<rect x="${P.l}" y="${P.t-6}" width="${xt27-P.l}" height="${H-P.b-P.t+6}" fill="#009870" fill-opacity=".05"/>`
-    :`<rect x="${xt27}" y="${P.t-6}" width="${W-P.r-xt27}" height="${H-P.b-P.t+6}" fill="#009870" fill-opacity=".05"/>`}
-  // etiketės viršuje – dviem eilėmis, kad nesikirstų
-  const rowsEnd=[-1e9,-1e9,-1e9],rowY=[44,30,16];
-  const lab=[...refs].sort((a,b)=>x(a[0])-x(b[0])).map(f=>{const t=`${f[1]}: ${fmt(f[0])}`,w=textW(t,"600 11px"),cx=Math.max(P.l+w/2,Math.min(W-P.r-w/2,x(f[0])));
-    let row=rowsEnd.findIndex(e=>cx-w/2>e+6);if(row<0)row=rowsEnd.indexOf(Math.min(...rowsEnd));rowsEnd[row]=cx+w/2;
-    return `<text x="${cx}" y="${rowY[row]}" font-size="11" font-weight="600" text-anchor="middle" fill="${f[3]==="#8A87A8"?"#6B6890":"#220083"}">${t}</text>`}).join("");
-  const lines=refs.map(f=>`<line x1="${x(f[0])}" x2="${x(f[0])}" y1="${P.t-6}" y2="${H-P.b}" stroke="${f[3]}" stroke-width="${f[4]}" ${f[2]?`stroke-dasharray="${f[2]}"`:""}/>`).join("");
-  const axis=`<line x1="${P.l}" x2="${W-P.r}" y1="${H-P.b}" y2="${H-P.b}" stroke="#220083"/>`+xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${H-P.b}" y2="${H-P.b+4}" stroke="#220083"/><text x="${x(v)}" y="${H-P.b+18}" font-size="11" text-anchor="middle" fill="#220083">${fmt(v)}</text>`).join("");
-  const others=rows.filter(o=>key(o)!==key(r)).map((o,k)=>{const yy=mid+((k%5)-2)*7,t=tp(`Apylinkė ${esc(o.a)}`,[["Rodiklio reikšmė",fmt(o.val)],["Tikslinė grupė",nf(o.tg)]],"#C4A8F5");
-    return o.val>xm?`<path d="M${W-P.r-8},${yy-5}L${W-P.r-8},${yy+5}L${W-P.r},${yy}Z" fill="#C4A8F5" ${t}/>`
-      :`<circle cx="${x(o.val)}" cy="${yy}" r="5" fill="#C4A8F5" fill-opacity=".75" stroke="#fff" stroke-width=".8" ${t}/>`}).join("");
-  const sx=x(r.val),lt=fmt(r.val),lw=textW(lt,"700 13px"),right=sx+14+lw<W-P.r;
-  const me=`<circle cx="${sx}" cy="${mid}" r="9" fill="#220083" stroke="#fff" stroke-width="2.5" ${tp(`Apylinkė ${esc(r.a)}`,[["Rodiklio reikšmė",fmt(r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
-    +`<text x="${right?sx+14:sx-14}" y="${mid+4}" font-size="13" font-weight="700" text-anchor="${right?"start":"end"}" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lt}</text>`;
-  return `<svg class="strip" viewBox="0 0 ${W} ${H}">${zone}${axis}${lines}${lab}${others}${me}</svg>`;
+  if(r.t27!=null){const yt27=y(r.t27),zy=i.lower?yt27:top,zh=i.lower?bot-yt27:yt27-top;
+    zone=`<rect x="${P.l}" y="${zy}" width="${R-P.l}" height="${Math.max(0,zh)}" fill="#009870" fill-opacity=".05"/>`}
+  const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${top}" y2="${bot}" stroke="#E6E4F5"/><text x="${x(v)}" y="${bot+20}" font-size="14" text-anchor="middle" fill="#220083">${nf(v)}</text>`).join("")
+    +yt.map(v=>`<line x1="${P.l}" x2="${R}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/><text x="${P.l-8}" y="${y(v)+4}" font-size="14" text-anchor="end" fill="#220083">${fmt(v)}</text>`).join("");
+  // etiketės be persidengimo: rūšiuojamos pagal aukštį, stumiamos per 15 px
+  const ry=L.map(f=>y(f[0])),ord=L.map((f,k)=>k).sort((a,b)=>ry[a]-ry[b]),ly={},G=17;
+  ord.forEach((k,j)=>{ly[k]=j?Math.max(ry[k],ly[ord[j-1]]+G):ry[k]});
+  for(let j=ord.length-1;j>=0;j--){const lim=j===ord.length-1?bot+6:ly[ord[j+1]]-G;if(ly[ord[j]]>lim)ly[ord[j]]=lim}
+  const lines=L.map((f,k)=>{const st=`stroke="${f[5]}" stroke-width="${f[3]}" ${f[2]?`stroke-dasharray="${f[2]}"`:""}`;
+    return `<line x1="${P.l}" x2="${R}" y1="${ry[k]}" y2="${ry[k]}" ${st}/><polyline points="${R},${ry[k]} ${R+8},${ly[k]} ${R+24},${ly[k]}" fill="none" ${st}/>`
+      +`<text x="${R+30}" y="${ly[k]+4}" font-size="14" fill="${f[6]}" ${f[4]?'font-weight="700"':""}>${f[1]}: ${fmt(f[0])}</text>`}).join("");
+  let nY=0;
+  const others=rows.filter(o=>key(o)!==key(r)).map(o=>{const t=tp(`Apylinkė ${esc(o.a)}`,[["Rodiklio reikšmė",fmt(o.val)],["Tikslinė grupė",nf(o.tg)]],"#C4A8F5");
+    if(o.val>ym){nY++;const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="#C4A8F5" ${t}/>`}
+    return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="6" fill="#C4A8F5" fill-opacity=".8" stroke="#fff" stroke-width="1" ${t}/>`}).join("");
+  const sx=x(r.tg),sy=y(r.val),lt=fmt(r.val),lw=textW(lt,"700 16px"),right=sx+16+lw<R;
+  const me=`<circle cx="${sx}" cy="${sy}" r="10" fill="#220083" stroke="#fff" stroke-width="2.5" ${tp(`Apylinkė ${esc(r.a)}`,[["Rodiklio reikšmė",fmt(r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
+    +`<text x="${right?sx+16:sx-16}" y="${sy-10}" font-size="16" font-weight="700" text-anchor="${right?"start":"end"}" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lt}</text>`;
+  const axes=`<line x1="${P.l}" x2="${P.l}" y1="${top}" y2="${bot}" stroke="#220083"/><line x1="${P.l}" x2="${R}" y1="${bot}" y2="${bot}" stroke="#220083"/>`
+    +`<text x="${(P.l+R)/2}" y="${H-8}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>`
+    +`<text transform="translate(14 ${(top+bot)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text>`;
+  const note=nY?`<div class="hint">${nY%10===1&&nY%100!==11?`${nY} apylinkės reikšmė viršija skalę (▲ viršuje).`:`${nY} apylinkių reikšmės viršija skalę (▲ viršuje).`}</div>`:"";
+  return `<svg class="ch" viewBox="0 0 ${W} ${H}">${zone}${grid}${axes}${lines}${others}${me}</svg>${note}`;
 }
