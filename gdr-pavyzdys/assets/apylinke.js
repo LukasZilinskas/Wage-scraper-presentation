@@ -71,18 +71,13 @@ function render(){
 
 function zero(i){return (D.apyl[i.nr]||[]).some(x=>key(x)===sel.value&&!(x.tg>0))}
 function card({i,rows,r,inst}){
-  const dir=i.lower?"Mažesnė reikšmė – geresnė":"Didesnė reikšmė – geresnė";
-  if(!r)return `<div class="ac"><div class="ph"><div><b>${i.name}</b><div class="s">${dir}</div></div><span class="badge na">Nėra duomenų</span></div>
+  if(!r)return `<div class="ac"><div class="ph"><b>${i.name}</b><span class="badge na">Nėra duomenų</span></div>
     <div class="empty sm">${zero(i)?"Apylinkės tikslinė grupė šiam rodikliui lygi 0, todėl reikšmė nevertinama.":"Šiam rodikliui apylinkės duomenų nėra."} Įstaigos reikšmė (${instQ}): <b>${fmt(inst)}</b>.</div></div>`;
   const s=status(r.val,r.t27,r.t29,i.lower);
   const ord=[...rows].sort((p,q)=>i.lower?p.val-q.val:q.val-p.val),rank=ord.findIndex(x=>key(x)===key(r))+1;
-  // kiek trūksta iki kiekvieno tikslo – viena trumpa eilutė
-  const gaps=[["2027",r.t27],["2028",r.t28],["2029",r.t29]].filter(g=>g[1]!=null)
-    .map(([y,t])=>reached(r.val,t,i.lower)?`<span class="gp ok">${y} m. – pasiektas</span>`:`<span class="gp bad">${y} m. – trūksta ${fmt(Math.abs(r.val-t))}</span>`).join("");
-  return `<div class="ac"><div class="ph"><div><b>${i.name}</b><div class="s">${dir}</div></div><span class="badge ${s.c}">${s.t}</span></div>
-    <div class="big">${fmt(r.val)}<small>Apylinkė ${esc(r.a)} · ${D.apylPeriod}</small></div>
-    <div class="meta">Tikslinė grupė: <b>${nf(r.tg)}</b> · vieta tarp įstaigos apylinkių: <b>${rank}</b> iš ${rows.length}</div>
-    <div class="gaps">${gaps}</div>
+  // reikšmė ir trumpa informacija vienoje eilutėje – daugiau vietos grafikui
+  return `<div class="ac"><div class="ph"><b>${i.name}</b><span class="badge ${s.c}">${s.t}</span></div>
+    <div class="vr"><span class="v">${fmt(r.val)}</span><span class="m">Tikslinė grupė <b>${nf(r.tg)}</b><br>Vieta tarp įstaigos apylinkių <b>${rank}</b> iš ${rows.length}</span></div>
     ${chart(i,rows,r,inst)}</div>`;
 }
 
@@ -100,8 +95,9 @@ function chart(i,rows,r,inst){
   let zone="";
   if(r.t27!=null){const yt27=y(r.t27),zy=i.lower?yt27:top,zh=i.lower?bot-yt27:yt27-top;
     zone=`<rect x="${P.l}" y="${zy}" width="${R-P.l}" height="${Math.max(0,zh)}" fill="#009870" fill-opacity=".05"/>`}
-  const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${top}" y2="${bot}" stroke="#E6E4F5"/><text x="${x(v)}" y="${bot+20}" font-size="14" text-anchor="middle" fill="#220083">${nf(v)}</text>`).join("")
-    +yt.map(v=>`<line x1="${P.l}" x2="${R}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/><text x="${P.l-8}" y="${y(v)+4}" font-size="14" text-anchor="end" fill="#220083">${fmt(v)}</text>`).join("");
+  // „0“ ašių susikirtime nerašomas
+  const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${top}" y2="${bot}" stroke="#E6E4F5"/>`+(v?`<text x="${x(v)}" y="${bot+20}" font-size="14" text-anchor="middle" fill="#220083">${nf(v)}</text>`:"")).join("")
+    +yt.map(v=>`<line x1="${P.l}" x2="${R}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/>`+(v?`<text x="${P.l-8}" y="${y(v)+4}" font-size="14" text-anchor="end" fill="#220083">${fmt(v)}</text>`:"")).join("");
   // etiketės be persidengimo: rūšiuojamos pagal aukštį, stumiamos per 15 px
   const ry=L.map(f=>y(f[0])),ord=L.map((f,k)=>k).sort((a,b)=>ry[a]-ry[b]),ly={},G=17;
   ord.forEach((k,j)=>{ly[k]=j?Math.max(ry[k],ly[ord[j-1]]+G):ry[k]});
