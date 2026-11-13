@@ -52,7 +52,12 @@ const rankOf=(it,r)=>[...it.rows].sort((p,q)=>it.i.lower?p.val-q.val:q.val-p.val
 IND.forEach((it,k)=>$("fI").add(new Option(it.i.name,k)));
 [["top","Pasiektas 2029 m. tikslas"],["ok","Pasiektas 2027 m. tikslas"],["bad","Nepasiektas 2027 m. tikslas"]].forEach(([v,t])=>$("fS").add(new Option(t,v)));
 pcs.sort((a,b)=>String(a).localeCompare(String(b),"lt",{numeric:true})).forEach(c=>$("fP").add(new Option(c==="–"?"Nenurodytas":c,c)));
-["fI","fS","fP"].forEach(id=>$(id).onchange=renderTable);
+// išskleisti rodikliai; įjungus filtrą – išskleidžiama viskas, kad atrinktos eilutės būtų matomos
+const opened=new Set();
+const plural=(n,a,b,c)=>`${n} ${n%10===1&&n%100!==11?a:(n%10>=2&&n%10<=9&&!(n%100>=12&&n%100<=19))?b:c}`;
+["fI","fS","fP"].forEach(id=>$(id).onchange=()=>{
+  if(["fI","fS","fP"].some(f=>$(f).value!=="*"))IND.forEach((x,n)=>opened.add(n));else opened.clear();
+  renderTable()});
 
 const h=decodeURIComponent(location.hash.slice(1));if(all.has(h))sel.value=h;
 sel.onchange=()=>{history.replaceState(null,"",sel.value?"#"+encodeURIComponent(sel.value):location.pathname+location.search);render()};
@@ -167,7 +172,7 @@ function chart(i,rows,r,inst,T,big){
   return `<svg class="ch" viewBox="0 0 ${W} ${H}">${zone}${grid}${axes}${lines}${others}${me}</svg>${note}`;
 }
 
-// Duomenų lentelė: visos įstaigos vaizde – visų rodiklių apylinkės (grupuota pagal rodiklį),
+// Duomenų lentelė: visos įstaigos vaizde – rodiklių eilutės (visa įstaiga), išskleidžiamos iki apylinkių,
 // pasirinkus apylinkę – tik tos apylinkės eilutės (po vieną kiekvienam rodikliui)
 function renderTable(){
   const k=sel.value,fi=$("fI").value,fs=$("fS").value,fp=k?"*":$("fP").value;
@@ -175,17 +180,28 @@ function renderTable(){
   const its=IND.map((it,n)=>({...it,n})).filter(it=>fi==="*"||String(it.n)===fi);
   let body="",cnt=0;
   if(!k){
-    $("th").textContent="Apylinkių duomenys";
-    const pcCol=multiPc;
-    const hd=`<tr><th>Apylinkė</th>${pcCol?"<th>Prisirašymo įstaigos kodas</th>":""}<th>Tikslinė grupė</th><th>Rodiklio reikšmė</th><th>Būsena</th></tr>`;
-    its.forEach(({i,rows,inst})=>{
+    // rodiklio eilutė = visa įstaiga; paspaudus išskleidžiamos to rodiklio apylinkės (drill down)
+    $("th").textContent="Rodiklių duomenys";
+    const pcCol=multiPc,ex0=[];
+    body=`<tr><th>Rodiklis / apylinkė</th>${pcCol?"<th>Prisirašymo įstaigos kodas</th>":""}<th>Tikslinė grupė</th><th>Rodiklio reikšmė</th><th>Būsena</th></tr>`;
+    let shown=0;
+    its.forEach(({i,rows,inst,n})=>{
       const rs=rows.filter(r=>(fp==="*"||String(r.pc??"–")===fp)&&pass(r.val,r.t27,r.t29,i.lower)).sort((p,q)=>i.lower?p.val-q.val:q.val-p.val);
-      if(!rs.length)return;
-      cnt+=rs.length;
-      body+=`<tr class="grp"><td colspan="${pcCol?5:4}">${i.name}</td></tr>`+hd
-        +`<tr class="tot"><td>Visa įstaiga <small>(${instQ})</small></td>${pcCol?`<td class="pi">–</td>`:""}<td class="g">${nf(i.tg)}</td><td>${fmt(inst)}</td><td>${badge(status(inst,i.t27,i.t29,i.lower))}</td></tr>`
-        +rs.map(r=>`<tr><td><a href="#${esc(encodeURIComponent(key(r)))}" data-k="${esc(key(r))}">Apylinkė ${esc(r.a)}</a></td>${pcCol?`<td class="pi">${esc(r.pc??"–")}</td>`:""}<td class="g">${nf(r.tg)}</td><td class="k">${fmt(r.val)}</td><td>${badge(status(r.val,r.t27,r.t29,i.lower))}</td></tr>`).join("");
+      if((fs!=="*"||fp!=="*")&&!rs.length)return;
+      shown++;cnt+=rs.length;
+      const ex=rs.length>0&&opened.has(n);
+      if(rs.length)ex0.push(n);
+      const nm=rs.length?`<button type="button" class="ex" data-x="${n}" aria-expanded="${ex}"><span class="ar"></span>${i.name}</button>`:`<span class="ex">${i.name}</span>`;
+      body+=`<tr class="ind${ex?" open":""}"><td>${nm}<small>Visa įstaiga · ${instQ} · ${rs.length?plural(rs.length,"apylinkė","apylinkės","apylinkių"):"apylinkių duomenų nėra"}</small></td>${pcCol?`<td class="pi">–</td>`:""}<td class="g">${nf(i.tg)}</td><td class="k">${fmt(inst)}</td><td>${badge(status(inst,i.t27,i.t29,i.lower))}</td></tr>`;
+      if(ex)body+=rs.map(r=>`<tr class="sub"><td><a href="#${esc(encodeURIComponent(key(r)))}" data-k="${esc(key(r))}">Apylinkė ${esc(r.a)}</a></td>${pcCol?`<td class="pi">${esc(r.pc??"–")}</td>`:""}<td class="g">${nf(r.tg)}</td><td class="k">${fmt(r.val)}</td><td>${badge(status(r.val,r.t27,r.t29,i.lower))}</td></tr>`).join("");
     });
+    if(!shown)body="";
+    const allOpen=ex0.length&&ex0.every(n=>opened.has(n));
+    $("tc").innerHTML=ex0.length?`<button type="button" class="exall" id="exall">${allOpen?"Suskleisti visus":"Išskleisti visus"}</button>`:"";
+    if($("exall"))$("exall").onclick=()=>{ex0.forEach(n=>allOpen?opened.delete(n):opened.add(n));renderTable()};
+    $("tt").innerHTML=body||`<tr><td class="none">Pagal pasirinktus filtrus duomenų nėra.</td></tr>`;
+    $("tt").querySelectorAll("button.ex").forEach(b=>b.onclick=()=>{const n=+b.dataset.x;opened.has(n)?opened.delete(n):opened.add(n);renderTable();const f=$("tt").querySelector(`button.ex[data-x="${n}"]`);if(f)f.focus()});
+    return;
   }else{
     $("th").textContent=sel.options[sel.selectedIndex].text+" – duomenys";
     const rs=its.map(it=>({...it,r:it.rows.find(o=>key(o)===k)})).filter(x=>x.r&&pass(x.r.val,x.r.t27,x.r.t29,x.i.lower));
@@ -193,7 +209,7 @@ function renderTable(){
     if(cnt)body=`<tr><th>Rodiklis</th><th>Tikslinė grupė</th><th>Apylinkės reikšmė</th><th>Įstaigos reikšmė</th><th>Šalies reikšmė</th><th>Vieta</th><th>Būsena</th></tr>`
       +rs.map(x=>`<tr><td>${x.i.name}</td><td class="g">${nf(x.r.tg)}</td><td class="k">${fmt(x.r.val)}</td><td>${fmt(x.inst)}</td><td>${fmt(x.i.country)}</td><td class="g">${rankOf(x,x.r)} iš ${x.rows.length}</td><td>${badge(status(x.r.val,x.r.t27,x.r.t29,x.i.lower))}</td></tr>`).join("");
   }
-  $("tc").textContent=cnt?`${cnt} ${cnt%10===1&&cnt%100!==11?"eilutė":(cnt%10>=2&&cnt%10<=9&&!(cnt%100>=12&&cnt%100<=19))?"eilutės":"eilučių"}`:"";
+  $("tc").textContent=cnt?plural(cnt,"eilutė","eilutės","eilučių"):"";
   $("tt").innerHTML=body||`<tr><td class="none">Pagal pasirinktus filtrus duomenų nėra.</td></tr>`;
 }
 

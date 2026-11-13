@@ -51,3 +51,19 @@ table.t tr.grp td{background:var(--lav);color:var(--violet);font-weight:700;font
 table.t td a{color:var(--violet);font-weight:600}
 table.t td.none{text-align:center;color:var(--mut);padding:22px}
 @media(max-width:700px){.tf{grid-template-columns:1fr}.zm{padding:0}.zc{border-radius:0;height:100%;background:#fff}.zc .ac{box-shadow:none;border-radius:0}}
+/* išskleidžiama lentelė */
+table.t tr.ind td{border-top:1px solid #E6E4F5;padding-top:12px;padding-bottom:12px;vertical-align:top}
+table.t tr.ind.open td{background:#F3F2FB}
+table.t tr.ind small{display:block;font-size:12px;color:var(--mut);margin:3px 0 0 22px;font-weight:400}
+.ex{display:inline-flex;align-items:baseline;gap:10px;border:0;background:none;padding:0;font:700 14px Inter,"Segoe UI",Arial,sans-serif;color:var(--violet);text-align:left;cursor:pointer}
+span.ex{cursor:default;padding-left:22px}
+button.ex:hover{text-decoration:underline}
+.ex .ar{flex:none;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin-right:3px;position:relative;top:-1px}
+tr.open .ex .ar{transform:rotate(45deg);top:-3px}
+table.t tr.sub td{background:#fff;padding-top:7px;padding-bottom:7px}
+table.t tr.sub td:first-child{padding-left:34px}
+.exall{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--violet);font:600 13px Inter,"Segoe UI",Arial,sans-serif;padding:6px 12px;cursor:pointer}
+.exall:hover{background:var(--lav)}
+table.t tr.sub a{font-size:14px;font-weight:500;text-decoration:none}
+table.t tr.sub a:hover{text-decoration:underline}
+table.t tr.sub:hover td{background:#FBFAFE}
