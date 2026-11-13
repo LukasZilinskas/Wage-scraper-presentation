@@ -79,17 +79,8 @@ function renderInd(){
   const st=(l,v,c)=>`<div class="stat"><span>${l}</span><b class="${c||""}">${v}</b></div>`;
   let li=i.vals.length-1;while(i.vals[li]==null)li--;
   const cur=i.vals[li],s=status(cur,i.t27,i.t29,i.lower);
-  // paaiškinimas: kiek trūksta iki tikslo ir ką tai reiškia sumai
-  const dir=i.lower?"sumažinti":"padidinti",gap=t=>fmt(Math.abs(cur-t));
-  const ex=cur==null||i.t27==null?"":s.c==="bad"
-    ?`Iki 2027 m. tikslo (${fmt(i.t27)}) reikšmę reikia ${dir} dar ${gap(i.t27)}. Jį pasiekus būtų mokama ${eur(i.galima)}`
-      +(i.t29!=null?`, pasiekus 2029 m. tikslą (${fmt(i.t29)}) – ${eur(i.galima29)}.`:".")
-    :s.c==="ok"
-    ?`2027 m. tikslas pasiektas, mokama ${eur(i.mokama)}.`
-      +(i.t29!=null?` Iki 2029 m. tikslo (${fmt(i.t29)}) reikšmę reikia ${dir} dar ${gap(i.t29)}; jį pasiekus suma padidėtų iki ${eur(i.galima29)}.`:"")
-    :`Pasiektas 2029 m. tikslas, todėl mokama padidinta suma – ${eur(i.mokama)} (galima suma ${eur(i.galima)}).`;
   $("ind").innerHTML=`<div class="ph"><div><b>${i.name}</b><div class="s">${i.lower?"Mažesnė reikšmė – geresnė":"Didesnė reikšmė – geresnė"}. Suma skaičiuojama pagal paskutinio ketvirčio reikšmę.</div></div><span class="badge ${s.c}">${s.t}</span></div>
-    <div class="big">${fmt(cur)}<small>${D.quarters[li]}</small></div>${ex?`<div class="expl">${ex}</div>`:""}${lineChart(i)}
+    <div class="big">${fmt(cur)}<small>${D.quarters[li]}</small></div>${lineChart(i)}
     <div class="stats">${st("2027 m. tikslas",fmt(i.t27))}${st("2028 m. tikslas",fmt(i.t28))}${st("2029 m. tikslas",fmt(i.t29))}${st("Tikslinė grupė",fmt(i.tg))}<div class="sep"></div>${st("Galima suma",eur(i.galima))}${st("Mokėtina suma",eur(i.mokama),i.mokama>0?"ok":"bad")}</div>`;
 }
 $("selI").onchange=()=>sync("selI");

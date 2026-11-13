@@ -40,7 +40,6 @@ select:focus{outline:2px solid var(--violet)}
 .badge{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap}
 .badge.bad{background:#F9E3E1;color:var(--bad)}.badge.ok{background:#DDF3EC;color:var(--ok)}
 .badge.top{background:#BFE8DB;color:#006B4F}.badge.na{background:#eee;color:#666}
-.expl{font-size:14px;line-height:1.5;color:#1F2937;margin:0 0 6px;max-width:820px}
 .big{font-size:44px;font-weight:700;color:var(--violet);margin:16px 0 4px}.big small{font-size:14px;font-weight:400;color:var(--mut);margin-left:10px}
 .panel svg{width:100%;height:auto;display:block}
 .stats{display:flex;flex-wrap:wrap;gap:12px 40px;border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
