@@ -87,12 +87,14 @@ $("selI").onchange=()=>sync("selI");
 const niceStep=r=>{const e=Math.pow(10,Math.floor(Math.log10(r))),f=r/e;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
 function ticks(max,cnt){if(!(max>0))max=1;const s=niceStep(max/cnt),a=[];for(let v=0;v<=max+s*.999;v+=s)a.push(+v.toFixed(6));return a}
 // Tikslų linijos ir zona – vienodai visuose grafikuose:
-// 2027 m. tikslas ištisinis (nuo jo priklauso mokėjimas), 2028 m. – šviesi trumpų brūkšnių, 2029 m. – vidutinių brūkšnių,
-// šalies reikšmė pilka taškinė; žalsva zona – sritis, kurioje 2027 m. tikslas pasiektas (pagal rodiklio kryptį).
+// 2027 m. tikslas ištisinis (nuo jo priklauso mokėjimas), 2028 ir 2029 m. – brūkšniniai;
+// šalies reikšmė pilka taškinė, įstaigos reikšmė (apylinkių grafike) tamsi taškinė;
+// žalsva zona – sritis, kurioje 2027 m. tikslas pasiektas (pagal rodiklio kryptį).
 function targetLines(t,y,P,W,H){
   // [reikšmė, pavadinimas, brūkšniai, storis, paryškinta, linijos spalva, etiketės spalva]
-  const L=[[t.t27,"2027 m. tikslas","",2,1,"#645DC0","#220083"],[t.t28,"2028 m. tikslas","4 4",1.5,0,"#A39BE6","#220083"],
-    [t.t29,"2029 m. tikslas","8 4",1.5,0,"#645DC0","#220083"],[t.country,"Šalies reikšmė","2 4",1.5,0,"#8A87A8","#6B6890"]].filter(r=>r[0]!=null);
+  const L=[[t.t27,"2027 m. tikslas","",2,1,"#645DC0","#220083"],[t.t28,"2028 m. tikslas","6 5",1.5,0,"#645DC0","#220083"],
+    [t.t29,"2029 m. tikslas","6 5",1.5,0,"#645DC0","#220083"],[t.country,"Šalies reikšmė","2 4",1.5,0,"#8A87A8","#6B6890"],
+    [t.own,"Įstaigos reikšmė","2 4",1.5,0,"#220083","#220083"]].filter(r=>r[0]!=null);
   const top=P.t,bot=H-P.b,ry=L.map(r=>Math.max(top,Math.min(bot,y(r[0])))),ord=L.map((r,k)=>k).sort((a,b)=>ry[a]-ry[b]),ly={},G=14;
   ord.forEach((k,j)=>{ly[k]=j?Math.max(ry[k],ly[ord[j-1]]+G):ry[k]});
   for(let j=ord.length-1;j>=0;j--){const lim=j===ord.length-1?bot+6:ly[ord[j+1]]-G;if(ly[ord[j]]>lim)ly[ord[j]]=lim}
@@ -111,10 +113,10 @@ function targetLines(t,y,P,W,H){
 function scatter(i,rows){
   rows=rows.filter(r=>r.v!=null&&r.g!=null);
   if(!rows.length)return `<div class="empty">Pasirinktai prisirašymo įstaigai duomenų nėra.</div>`;
-  const f=D.apyl[i.nr][0],t27=f.t27,t28=f.t28,t29=f.t29,tg={t27,t28,t29,country:i.country,lower:i.lower};
+  const f=D.apyl[i.nr][0],t27=f.t27,t28=f.t28,t29=f.t29,own=[...i.vals].reverse().find(v=>v!=null),tg={t27,t28,t29,country:i.country,own,lower:i.lower};
   const W=900,H=360,P={l:60,r:180,t:14,b:52};
   // Y skalė: pavienės išskirtys (>1,5 karto virš 90-ojo procentilio ir tikslų) žymimos ▲ viršuje, kad tikslų linijos nesusispaustų
-  const vs=rows.map(r=>r.v).sort((a,b)=>a-b),tmax=Math.max(0,...[t27,t28,t29,i.country].filter(v=>v!=null));
+  const vs=rows.map(r=>r.v).sort((a,b)=>a-b),tmax=Math.max(0,...[t27,t28,t29,i.country,own].filter(v=>v!=null));
   const ytop=Math.min(vs[vs.length-1],Math.max(vs[Math.floor((vs.length-1)*.9)],tmax)*1.5);
   const xt=ticks(Math.max(...rows.map(r=>r.g))*1.05,6),yt=ticks(Math.max(ytop,tmax)*1.08,6);
   const xm=xt[xt.length-1],ym=yt[yt.length-1];
