@@ -107,33 +107,36 @@ function card(it,n,big){
     const s=status(inst,i.t27,i.t29,i.lower),ok=rows.filter(x=>reached(x.val,x.t27,i.lower)).length;
     const head=`<div class="ph"><b>${i.name}</b>${badge(s)}</div>${btn}
       <div class="vr"><span class="v">${fmt(inst)}</span><span class="m">Įstaigos reikšmė · ${instQ}`+(rows.length?`<br>Apylinkių, pasiekusių 2027 m. tikslą: <b>${ok}</b> iš ${rows.length}`:"")+`</span></div>`;
-    return `<div class="ac${big?" big":""}">${head}${rows.length?chart(i,rows,null,inst,i,big):`<div class="empty sm">Šiam rodikliui apylinkių duomenų nėra.</div>`}</div>`;
+    return `<div class="ac${big?" zoomed":""}">${head}${rows.length?chart(i,rows,null,inst,i,big):`<div class="empty sm">Šiam rodikliui apylinkių duomenų nėra.</div>`}</div>`;
   }
   if(!r)return `<div class="ac"><div class="ph"><b>${i.name}</b><span class="badge na">Nėra duomenų</span></div>
     <div class="empty sm">${zero(i)?"Apylinkės tikslinė grupė šiam rodikliui lygi 0, todėl reikšmė nevertinama.":"Šiam rodikliui apylinkės duomenų nėra."} Įstaigos reikšmė (${instQ}): <b>${fmt(inst)}</b>.</div></div>`;
   const s=status(r.val,r.t27,r.t29,i.lower);
-  return `<div class="ac${big?" big":""}"><div class="ph"><b>${i.name}</b>${badge(s)}</div>${btn}
+  return `<div class="ac${big?" zoomed":""}"><div class="ph"><b>${i.name}</b>${badge(s)}</div>${btn}
     <div class="vr"><span class="v">${fmt(r.val)}</span><span class="m">Apylinkė ${esc(r.a)} · ${D.apylPeriod}<br>Tikslinė grupė <b>${nf(r.tg)}</b> · vieta tarp įstaigos apylinkių <b>${rankOf(it,r)}</b> iš ${rows.length}</span></div>
     ${chart(i,rows,r,inst,r,big)}</div>`;
 }
 
 // Padidintas rodiklis – atskirame sluoksnyje virš puslapio; uždaroma ×, Esc arba paspaudus šalia
 let zoomK=null,zoomFrom=null;
-function openZoom(n){zoomK=n;zoomFrom=document.activeElement;fillZoom();$("zm").hidden=false;document.body.classList.add("noscroll");$("zx").focus()}
+let zoomW=1000;
+function openZoom(n){zoomK=n;zoomFrom=document.activeElement;$("zm").hidden=false;fillZoom();document.body.classList.add("noscroll");$("zx").focus()}
 function fillZoom(){
+  zoomW=Math.max(600,Math.min(1120,innerWidth-48)-52);  // lango plotis be vidinių paraščių
   $("zc").innerHTML=card(IND[zoomK],zoomK,true);
   if(!$("zx")){closeZoom();return}
   $("zx").onclick=closeZoom;
 }
 function closeZoom(){zoomK=null;$("zm").hidden=true;$("zc").innerHTML="";document.body.classList.remove("noscroll");if(zoomFrom&&document.contains(zoomFrom))zoomFrom.focus()}
 $("zbg").onclick=closeZoom;
+addEventListener("resize",()=>{if(zoomK!=null)fillZoom()});
 
 // Grafikas: Y – rodiklio reikšmė, X – tikslinė grupė (kaip „Apylinkių palyginime“);
 // horizontalios linijos – tikslai, įstaigos ir šalies reikšmės; linija nueina iki savo etiketės dešinėje.
 // r – pasirinkta apylinkė (null – visos įstaigos vaizdas), T – tikslų šaltinis.
 function chart(i,rows,r,inst,T,big){
   big=big&&innerWidth>=760;
-  const W=big?1000:560,H=big?520:440,P=big?{l:64,r:150,t:16,b:54}:{l:58,r:142,t:16,b:54};
+  const W=big?zoomW:560,H=big?Math.round(Math.min(zoomW*.52,Math.max(380,innerHeight-230))):440,P=big?{l:64,r:150,t:16,b:54}:{l:58,r:142,t:16,b:54};
   const L=[[T.t27,"2027 m.","",2,1,"#645DC0","#220083"],[T.t28,"2028 m.","6 5",1.5,0,"#645DC0","#220083"],[T.t29,"2029 m.","6 5",1.5,0,"#645DC0","#220083"],
            [i.country,"Šalis","2 4",1.5,0,"#8A87A8","#6B6890"],[inst,"Įstaiga","2 4",r?1.5:2,r?0:1,"#220083","#220083"]].filter(x=>x[0]!=null);
   const vs=rows.map(x=>x.val).sort((a,b)=>a-b),q90=vs[Math.floor((vs.length-1)*.9)];
