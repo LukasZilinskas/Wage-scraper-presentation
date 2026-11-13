@@ -128,17 +128,15 @@ function scatter(i,rows){
   const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${P.t}" y2="${H-P.b}" stroke="#E6E4F5"/>`+(v?`<text x="${x(v)}" y="${H-P.b+20}" font-size="12" text-anchor="middle" fill="#220083">${nf(v)}</text>`:"")).join("")
    +yt.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/>`+(v?`<text x="${P.l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="#220083">${fmt(v)}</text>`:"")).join("");
   const tl=targetLines(tg,y,P,W,H);
-  let nY=0;
   const dots=rows.map(r=>{
     const rr=[["Prisirašymo įstaigos kodas",esc(r.pc)],["Rodiklio reikšmė",fmt(r.v)],["Tikslinė grupė",nf(r.g)]],t=tp(`<b>Apylinkė ${esc(r.a)}</b>`,r.v>ym?rr.concat([["","už skalės ribų"]]):rr,col(r.v));
     if(r.v<=ym)return `<circle cx="${x(r.g)}" cy="${y(r.v)}" r="6" fill="${col(r.v)}" stroke="#fff" stroke-width="1" ${t}/>`;
-    nY++;const tx=x(r.g),ty=P.t+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${col(r.v)}" ${t}/>`;
+    const tx=x(r.g),ty=P.t+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${col(r.v)}" ${t}/>`;
   }).join("");
-  const note=nY?`<div class="hint">${nY%10===1&&nY%100!==11?`${nY} apylinkės reikšmė viršija skalę (žymima ▲ viršuje).`:`${nY} apylinkių reikšmės viršija skalę (žymimos ▲ viršuje).`}</div>`:"";
   return `<div class="lg"><span><i class="c-top"></i>Pasiektas 2029 m. tikslas</span><span><i class="c-ok"></i>Pasiektas 2027 m. tikslas</span><span><i class="c-bad"></i>Nepasiektas 2027 m. tikslas</span></div><svg viewBox="0 0 ${W} ${H}">${tl.zone}${grid}<line x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${H-P.b}" stroke="#220083"/><line x1="${P.l}" x2="${W-P.r}" y1="${H-P.b}" y2="${H-P.b}" stroke="#220083"/>
   ${tl.lines}${dots}
   <text x="${(P.l+W-P.r)/2}" y="${H-12}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>
-  <text transform="translate(16 ${(P.t+H-P.b)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text></svg>${note}`;
+  <text transform="translate(16 ${(P.t+H-P.b)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text></svg>`;
 }
 D.indicators.forEach((i,k)=>{if(D.apyl[i.nr])$("selO").add(new Option(i.name,k))});
 function renderOv(){
@@ -181,10 +179,8 @@ function countryChart(i){
   // taškai: viduje – apskritimai; už Y ribų – ▲ viršuje; už X ribų – ▶ dešinėje
   const tip=(p,o)=>tp("<b>Kita įstaiga</b>",[["Tikslinė grupė",nf(p[0])],["Rodiklio reikšmė",fmt(p[1])]].concat(o?[["","už skalės ribų"]]:[]),"#B9A3F0");
   const F='fill="#B9A3F0"';
-  let nY=0,nX=0;
   const dots=pe.map(p=>{
     const oy=p[1]>ym,ox=p[0]>xmax;
-    if(oy)nY++;if(ox)nX++;
     const cx=x(p[0]),cy=y(p[1]);
     if(!oy&&!ox)return `<circle cx="${cx}" cy="${cy}" r="4.5" ${F} fill-opacity=".55" stroke="#fff" stroke-width=".8" ${tip(p)}/>`;
     if(oy){const tx=ox?cx-6:cx,ty=P.t+2;return `<path d="M${tx-5},${ty+8}L${tx+5},${ty+8}L${tx},${ty}Z" ${F} ${tip(p,1)}/>`}
@@ -202,15 +198,11 @@ function countryChart(i){
     <circle cx="${cx}" cy="${cy}" r="8" fill="#220083" stroke="#fff" stroke-width="2.5" ${tp(`<b>${esc(D.name)}</b>`,[["Rodiklio reikšmė",fmt(last)],["Tikslinė grupė",nf(i.tg)]],"#220083")}/>
     <text x="${tx}" y="${ty}" font-size="13" font-weight="700" text-anchor="start" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${esc(lbl)}</text>`;
   }
-  const one=n=>n%10===1&&n%100!==11,gen=n=>one(n)?"įstaigos":"įstaigų";
-  const note=[];
-  if(nY)note.push(one(nY)?`${nY} įstaigos reikšmė viršija skalę (žymima ▲ viršuje).`:`${nY} įstaigų reikšmės viršija skalę (žymimos ▲ viršuje).`);
-  if(nX)note.push(one(nX)?`${nX} įstaigos tikslinė grupė viršija skalę (žymima ▶ dešinėje).`:`${nX} įstaigų tikslinės grupės viršija skalę (žymimos ▶ dešinėje).`);
   return `<div class="lg"><span><i class="c-me"></i>${esc(D.name)}</span><span><i class="c-peer"></i>Kitos įstaigos</span></div>
   <svg viewBox="0 0 ${W} ${H}">${tl.zone}${grid}${dots}${tl.lines}
   <line x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${H-P.b}" stroke="#220083"/><line x1="${P.l}" x2="${W-P.r}" y1="${H-P.b}" y2="${H-P.b}" stroke="#220083"/>${me}
   <text x="${(P.l+W-P.r)/2}" y="${H-12}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>
-  <text transform="translate(16 ${(P.t+H-P.b)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text></svg>${note.length?`<div class="hint">${note.join(" ")}</div>`:""}`;
+  <text transform="translate(16 ${(P.t+H-P.b)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text></svg>`;
 }
 function renderCo(){$("co").innerHTML=countryChart(D.indicators[$("selC").value])}
 function sync(src){
@@ -369,11 +361,10 @@ function apyl2(){
       return `<line x1="${P.l}" x2="${R}" y1="${ry[k]}" y2="${ry[k]}" ${st}/><polyline points="${R},${ry[k]} ${R+8},${ly[k]} ${R+24},${ly[k]}" fill="none" ${st}/>`
         +`<text x="${R+30}" y="${ly[k]+4}" font-size="14" fill="${f[6]}" ${f[4]?'font-weight="700"':""}>${f[1]}: ${fmt(f[0])}</text>`}).join("");
     // apylinkių taškai spalvinami pagal pasiektą tikslą; spustelėjus pasirenkama apylinkė
-    let nY=0;
     const others=rows.filter(o=>!r||key(o)!==key(r)).map(o=>{const oc=DOT[status(o.val,o.t27,o.t29,i.lower).c]||DOT.bad;
       const t=tp(`Apylinkė ${esc(o.a)}`,[["Rodiklio reikšmė",fmt(o.val)],["Tikslinė grupė",nf2(o.tg)],["","Spustelėkite – rodyti šią apylinkę"]],oc);
       const dk=`data-k="${esc(key(o))}" class="pt"`;
-      if(o.val>ym){nY++;const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${oc}" ${dk} ${t}/>`}
+      if(o.val>ym){const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${oc}" ${dk} ${t}/>`}
       return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="${big?7:6}" fill="${oc}" stroke="#fff" stroke-width="1" ${dk} ${t}/>`}).join("");
     let me="";
     if(r){const sx=x(r.tg),sy=y(r.val),lt=fmt(r.val),lw=textW(lt,"700 16px"),right=sx+20+lw<R;
@@ -382,8 +373,7 @@ function apyl2(){
     const axes=`<line x1="${P.l}" x2="${P.l}" y1="${top}" y2="${bot}" stroke="#220083"/><line x1="${P.l}" x2="${R}" y1="${bot}" y2="${bot}" stroke="#220083"/>`
       +`<text x="${(P.l+R)/2}" y="${H-8}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>`
       +`<text transform="translate(14 ${(top+bot)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text>`;
-    const note=nY?`<div class="hint">${nY%10===1&&nY%100!==11?`${nY} apylinkės reikšmė viršija skalę (▲ viršuje).`:`${nY} apylinkių reikšmės viršija skalę (▲ viršuje).`}</div>`:"";
-    return `<svg class="ch" viewBox="0 0 ${W} ${H}">${zone}${grid}${axes}${lines}${others}${me}</svg>${note}`;
+    return `<svg class="ch" viewBox="0 0 ${W} ${H}">${zone}${grid}${axes}${lines}${others}${me}</svg>`;
   }
 
   // Duomenų lentelė: visos įstaigos vaizde – rodiklių eilutės (visa įstaiga), išskleidžiamos iki apylinkių;
