@@ -70,14 +70,7 @@ function render(){
   $("prev").disabled=sel.selectedIndex<=0;$("next").disabled=sel.selectedIndex>=sel.options.length-1;
   if(!k){
     $("note").textContent=list.length?`Rodoma visa įstaiga. Pasirinkite apylinkę arba spustelėkite jos tašką grafike. Apylinkių reikšmės – ${D.apylPeriod}, įstaigos – ${instQ}.`:"Šiai įstaigai apylinkių duomenų nėra.";
-    const w=IND.filter(x=>x.inst!=null&&x.i.t27!=null),n=w.length,cnt=f=>w.filter(f).length;
-    const pairs=IND.flatMap(x=>x.rows.filter(r=>r.t27!=null).map(r=>reached(r.val,r.t27,x.i.lower)));
-    $("cards").innerHTML=cards([
-      ["Pasiekti 2027 m. tikslai",`${cnt(x=>reached(x.inst,x.i.t27,x.i.lower))} iš ${n}`,1],
-      ["Pasiekti 2029 m. tikslai",`${cnt(x=>reached(x.inst,x.i.t29,x.i.lower))} iš ${n}`],
-      ["Geriau už šalies reikšmę",`${cnt(x=>x.i.country!=null&&better(x.inst,x.i.country,x.i.lower))} iš ${n}`],
-      ["Apylinkių reikšmės, pasiekusios 2027 m. tikslą",`${pairs.filter(Boolean).length} iš ${pairs.length}`],
-    ]);
+    $("cards").innerHTML="";$("cards").hidden=true;  // visos įstaigos vaizde KPI kortelių nėra
   }else{
     $("note").textContent=`Apylinkių reikšmės – ${D.apylPeriod}, įstaigos reikšmė – paskutinio turimo ketvirčio (${instQ}).`;
     const w=IND.map(x=>({...x,r:x.rows.find(o=>key(o)===k)})).filter(x=>x.r),n=w.length,cnt=f=>w.filter(f).length;
@@ -85,8 +78,8 @@ function render(){
       ["Pasiekti 2027 m. tikslai",`${cnt(x=>reached(x.r.val,x.r.t27,x.i.lower))} iš ${n}`,1],
       ["Pasiekti 2029 m. tikslai",`${cnt(x=>reached(x.r.val,x.r.t29,x.i.lower))} iš ${n}`],
       ["Geriau už įstaigos reikšmę",`${cnt(x=>x.inst!=null&&better(x.r.val,x.inst,x.i.lower))} iš ${n}`],
-      ["Geriau už šalies reikšmę",`${cnt(x=>x.i.country!=null&&better(x.r.val,x.i.country,x.i.lower))} iš ${n}`],
     ]);
+    $("cards").hidden=false;
   }
   $("out").innerHTML=IND.map((it,n)=>card(it,n,false)).join("");
   document.querySelectorAll("#out .zb").forEach(b=>b.onclick=()=>openZoom(+b.dataset.n));
