@@ -64,7 +64,7 @@ function lineChart(i){
   const all=pv.map(p=>p.t).concat([i.t27,i.t28,i.t29,i.country].filter(v=>v!=null)),mn=Math.min(...all),mx=Math.max(...all),pad=(mx-mn)*.2||1,lo=mn-pad,hi=mx+pad;
   const x=k=>P.l+k*(W-P.l-P.r)/(n-1),y=t=>P.t+(hi-t)*(H-P.t-P.b)/(hi-lo);
   const pts=pv.map(p=>x(p.k)+","+y(p.t)).join(" "),last=pv[pv.length-1];
-  const tl=targetLines(i,y,P,W,H,false),ry=tl.ry;
+  const tl=targetLines(i,y,P,W,H),ry=tl.ry;
   const near=(a,b)=>ry.some(v=>v>a&&v<b);
   const lbl=p=>{const yy=y(p.t),up=yy-11;let ly=up;if(near(up-12,up+4)&&!near(yy+8,yy+24))ly=yy+20;return `<text x="${x(p.k)}" y="${ly}" font-size="12" text-anchor="middle" fill="#1F2937" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${fmt(p.t)}</text>`};
   return `<svg viewBox="0 0 ${W} ${H}">
@@ -98,7 +98,7 @@ function ticks(max,cnt){if(!(max>0))max=1;const s=niceStep(max/cnt),a=[];for(let
 // Tikslų linijos ir zona – vienodai visuose grafikuose:
 // 2027 m. tikslas ištisinis (nuo jo priklauso mokėjimas), 2028–2029 m. brūkšniniai, šalies reikšmė pilka taškinė;
 // žalsva zona – sritis, kurioje 2027 m. tikslas pasiektas (pagal rodiklio kryptį).
-function targetLines(t,y,P,W,H,zoneRight){
+function targetLines(t,y,P,W,H){
   const L=[[t.t27,"2027 m. tikslas","",2,1],[t.t28,"2028 m. tikslas","6 5",1.5,0],[t.t29,"2029 m. tikslas","6 5",1.5,0],[t.country,"Šalies reikšmė","2 4",1.5,0]].filter(r=>r[0]!=null);
   const top=P.t,bot=H-P.b,ry=L.map(r=>Math.max(top,Math.min(bot,y(r[0])))),ord=L.map((r,k)=>k).sort((a,b)=>ry[a]-ry[b]),ly={},G=14;
   ord.forEach((k,j)=>{ly[k]=j?Math.max(ry[k],ly[ord[j-1]]+G):ry[k]});
@@ -108,9 +108,7 @@ function targetLines(t,y,P,W,H,zoneRight){
   let zone="";
   if(t.t27!=null){
     const yt=Math.max(top,Math.min(bot,y(t.t27))),zy=t.lower?yt:top,zh=Math.max(0,t.lower?bot-yt:yt-top);
-    const tx=zoneRight?W-P.r-8:P.l+6,ty=t.lower?zy+zh-6:zy+13;
-    zone=`<rect x="${P.l}" y="${zy}" width="${W-P.l-P.r}" height="${zh}" fill="#009870" fill-opacity=".08"/>`
-      +(zh>=18?`<text x="${tx}" y="${ty}" font-size="11" text-anchor="${zoneRight?"end":"start"}" fill="#007A5A">2027 m. tikslas pasiektas</text>`:"");
+    zone=`<rect x="${P.l}" y="${zy}" width="${W-P.l-P.r}" height="${zh}" fill="#009870" fill-opacity=".08"/>`;
   }
   return {zone,lines,ry};
 }
@@ -130,7 +128,7 @@ function scatter(i,rows){
   const hit=v=>i.lower?v<=t27:v>=t27,hit29=v=>i.lower?v<=t29:v>=t29,col=v=>hit29(v)?C.top:hit(v)?C.ok:C.bad;
   const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${P.t}" y2="${H-P.b}" stroke="#E6E4F5"/><text x="${x(v)}" y="${H-P.b+20}" font-size="12" text-anchor="middle" fill="#220083">${nf(v)}</text>`).join("")
    +yt.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/><text x="${P.l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="#220083">${fmt(v)}</text>`).join("");
-  const tl=targetLines(tg,y,P,W,H,true);
+  const tl=targetLines(tg,y,P,W,H);
   let nY=0;
   const dots=rows.map(r=>{
     const rr=[["Prisirašymo įstaigos kodas",esc(r.pc)],["Rodiklio reikšmė",fmt(r.v)],["Tikslinė grupė",nf(r.g)]],t=tp(`<b>Apylinkė ${esc(r.a)}</b>`,r.v>ym?rr.concat([["","už skalės ribų"]]):rr,col(r.v));
@@ -179,7 +177,7 @@ function countryChart(i){
   const y=v=>H-P.b-Math.min(v,ym)/ym*(H-P.t-P.b);
   const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${P.t}" y2="${H-P.b}" stroke="#E6E4F5"/><text x="${x(v)}" y="${H-P.b+20}" font-size="12" text-anchor="middle" fill="#220083">${nf(v)}</text>`).join("")
    +yt.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/><text x="${P.l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="#220083">${yf(v)}</text>`).join("");
-  const tl=targetLines(i,y,P,W,H,true),ry=tl.ry;
+  const tl=targetLines(i,y,P,W,H),ry=tl.ry;
   // taškai: viduje – apskritimai; už Y ribų – ▲ viršuje; už X ribų – ▶ dešinėje
   const tip=(p,o)=>tp("<b>Kita įstaiga</b>",[["Tikslinė grupė",nf(p[0])],["Rodiklio reikšmė",fmt(p[1])]].concat(o?[["","už skalės ribų"]]:[]),"#B9A3F0");
   const F='fill="#B9A3F0"';
