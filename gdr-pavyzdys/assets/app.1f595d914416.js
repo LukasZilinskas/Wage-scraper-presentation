@@ -99,7 +99,7 @@ function targetLines(t,y,P,W,H){
   let zone="";
   if(t.t27!=null){
     const yt=Math.max(top,Math.min(bot,y(t.t27))),zy=t.lower?yt:top,zh=Math.max(0,t.lower?bot-yt:yt-top);
-    zone=`<rect x="${P.l}" y="${zy}" width="${W-P.l-P.r}" height="${zh}" fill="#009870" fill-opacity=".08"/>`;
+    zone=`<rect x="${P.l}" y="${zy}" width="${W-P.l-P.r}" height="${zh}" fill="#009870" fill-opacity=".035"/>`;
   }
   return {zone,lines,ry};
 }
