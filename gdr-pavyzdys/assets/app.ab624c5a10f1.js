@@ -124,8 +124,9 @@ function scatter(i,rows){
   // spalvos (violetinės): tamsiausia – pasiekta 2029 m.; vidutinė – pasiekta 2027 m.; šviesi – nepasiekta 2027 m.
   const C={bad:"#C4A8F5",ok:"#645DC0",top:"#220083"};
   const hit=v=>i.lower?v<=t27:v>=t27,hit29=v=>i.lower?v<=t29:v>=t29,col=v=>hit29(v)?C.top:hit(v)?C.ok:C.bad;
-  const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${P.t}" y2="${H-P.b}" stroke="#E6E4F5"/><text x="${x(v)}" y="${H-P.b+20}" font-size="12" text-anchor="middle" fill="#220083">${nf(v)}</text>`).join("")
-   +yt.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/><text x="${P.l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="#220083">${fmt(v)}</text>`).join("");
+  // „0“ ašių susikirtime nerašomas
+  const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${P.t}" y2="${H-P.b}" stroke="#E6E4F5"/>`+(v?`<text x="${x(v)}" y="${H-P.b+20}" font-size="12" text-anchor="middle" fill="#220083">${nf(v)}</text>`:"")).join("")
+   +yt.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/>`+(v?`<text x="${P.l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="#220083">${fmt(v)}</text>`:"")).join("");
   const tl=targetLines(tg,y,P,W,H);
   let nY=0;
   const dots=rows.map(r=>{
@@ -173,8 +174,9 @@ function countryChart(i){
   const yt=ticks(Math.max(q97(pe.map(p=>p[1])),last??0,i.t27,i.t28,i.t29,i.country??0)*1.1,5),ym=yt[yt.length-1];
   const yd=Math.max(0,-Math.floor(Math.log10(yt[1]-yt[0]+1e-12))),yf=v=>v.toLocaleString("lt-LT",{minimumFractionDigits:yd,maximumFractionDigits:yd});
   const y=v=>H-P.b-Math.min(v,ym)/ym*(H-P.t-P.b);
-  const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${P.t}" y2="${H-P.b}" stroke="#E6E4F5"/><text x="${x(v)}" y="${H-P.b+20}" font-size="12" text-anchor="middle" fill="#220083">${nf(v)}</text>`).join("")
-   +yt.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/><text x="${P.l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="#220083">${yf(v)}</text>`).join("");
+  // „0“ ašių susikirtime nerašomas
+  const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${P.t}" y2="${H-P.b}" stroke="#E6E4F5"/>`+(v?`<text x="${x(v)}" y="${H-P.b+20}" font-size="12" text-anchor="middle" fill="#220083">${nf(v)}</text>`:"")).join("")
+   +yt.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E4F5"/>`+(v?`<text x="${P.l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="#220083">${yf(v)}</text>`:"")).join("");
   const tl=targetLines(i,y,P,W,H),ry=tl.ry;
   // taškai: viduje – apskritimai; už Y ribų – ▲ viršuje; už X ribų – ▶ dešinėje
   const tip=(p,o)=>tp("<b>Kita įstaiga</b>",[["Tikslinė grupė",nf(p[0])],["Rodiklio reikšmė",fmt(p[1])]].concat(o?[["","už skalės ribų"]]:[]),"#B9A3F0");
