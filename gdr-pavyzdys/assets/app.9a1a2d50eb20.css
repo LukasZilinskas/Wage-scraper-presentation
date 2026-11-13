@@ -79,3 +79,80 @@ table.t .dot.ok{background:var(--ok)}table.t .dot.bad{background:var(--bad)}
 /* Šaknies ir 404 puslapiai */
 .notice{max-width:560px;margin:0 auto;text-align:center;font-size:16px;line-height:1.6;color:#1F2937}
 .notice p{margin:0 0 12px}.notice .mut{color:var(--mut);font-size:14px}
+/* ===== versijų perjungiklis ir 2 versija ===== */
+nav{align-items:center;gap:12px;flex-wrap:wrap}
+nav .ver{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:12px;background:#fff}
+nav .ver button{padding:7px 12px;font-size:13px;border-radius:9px}
+nav .ver button.active{box-shadow:none}
+@media(min-width:1180px){nav .ver{position:absolute;right:24px;top:50%;transform:translateY(-50%)}}
+.v2{display:none}
+body.ver2 .v1{display:none}
+body.ver2 .v2{display:block}
+.panel.stack+.panel.stack{border-top:1px solid var(--line);margin-top:36px;padding-top:32px}
+.pick{max-width:640px;margin:0 auto;scroll-margin-top:90px}
+.pick label{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+.pick .row{display:flex;gap:8px;align-items:center;margin-top:6px}
+.pick select{margin-top:0}
+.pick button{flex:none;width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--violet);font:700 18px Inter,"Segoe UI",Arial,sans-serif;cursor:pointer}
+.pick button:hover:not(:disabled){background:var(--lav)}
+.pick button:disabled{opacity:.35;cursor:default}
+#aCards{margin:24px 0 8px}
+#aCards[hidden]{display:none}
+@media(min-width:901px){#aCards{grid-template-columns:repeat(3,1fr)}}
+.lg.dots{margin:22px 0 0;gap:26px;font-size:13px}
+.lg.dots i.c-sel{background:#fff;border:2px solid #220083;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 7px #645DC0;width:16px;height:16px;vertical-align:-3px}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+@media(max-width:900px){.agrid{grid-template-columns:1fr}}
+.ac{position:relative;border:1px solid var(--line);border-radius:14px;padding:16px 18px 12px;background:#fff;min-width:0}
+.ac .ph{align-items:center;padding-right:44px}
+.ac .ph b{font-size:17px;line-height:1.25}
+.ac .badge{font-size:12px;padding:4px 10px;display:inline-block}
+.vr{display:flex;align-items:center;gap:16px;margin-top:10px}
+.vr .v{font-size:38px;font-weight:700;color:var(--violet);line-height:1}
+.vr .m{font-size:13px;color:#44464B;line-height:1.45}
+.vr .m b{color:var(--violet)}
+svg.ch{width:100%;height:auto;display:block;margin-top:8px}
+svg.ch .pt{cursor:pointer}
+svg.ch .pt:hover{stroke:#220083;stroke-width:1.5}
+.empty.sm{padding:18px 0 6px;font-size:14px}
+@media(max-width:600px){.ac{padding:14px}.ac .ph{flex-direction:column;align-items:flex-start;gap:8px}.ac .badge{white-space:normal}}
+/* didinimo mygtukas ir padidintas rodiklis */
+.zb{position:absolute;top:12px;right:12px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--violet);cursor:pointer;padding:0}
+.zb:hover{background:var(--lav)}
+.zb svg{width:16px;height:16px}
+.zb.x{width:40px;height:40px;top:14px;right:14px}
+.zb.x svg{width:18px;height:18px}
+.zm{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:24px}
+.zm[hidden]{display:none}
+.zbg{position:absolute;inset:0;background:rgba(20,10,60,.45)}
+.zc{position:relative;width:100%;max-width:1120px;max-height:100%;overflow:auto;border-radius:16px}
+.zc .ac{padding:22px 26px 16px;border:0;box-shadow:0 20px 60px rgba(34,0,131,.3)}
+.zc .ac .ph{padding-right:56px}
+.zc .ac .ph b{font-size:20px}
+.zc .ac .vr .v{font-size:42px}
+.zc .ac .vr .m{font-size:14px}
+.zc .ac .hint{font-size:13px}
+.zc svg.ch{max-height:calc(100vh - 220px)}
+body.noscroll{overflow:hidden}
+/* 2 versijos duomenų lentelė */
+.tblw{margin-top:36px}
+.tf{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;padding:0 15px;margin-bottom:14px}
+.tf label{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+.tf>div[hidden]{display:none}
+table.t td.none{text-align:center;color:var(--mut);padding:22px}
+table.t tr.aind td{border-top:1px solid #E6E4F5;padding-top:12px;padding-bottom:12px;vertical-align:top}
+table.t tr.aind.open td{background:#F3F2FB}
+table.t tr.aind small{display:block;font-size:12px;color:var(--mut);margin:3px 0 0 22px;font-weight:400}
+.ex{display:inline-flex;align-items:baseline;gap:10px;border:0;background:none;padding:0;font:700 14px Inter,"Segoe UI",Arial,sans-serif;color:var(--violet);text-align:left;cursor:pointer}
+span.ex{cursor:default;padding-left:22px}
+button.ex:hover{text-decoration:underline}
+.ex .ar{flex:none;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin-right:3px;position:relative;top:-1px}
+tr.open .ex .ar{transform:rotate(45deg);top:-3px}
+table.t tr.asub td{background:#fff;padding-top:7px;padding-bottom:7px}
+table.t tr.asub td:first-child{padding-left:34px}
+table.t tr.asub:hover td{background:#FBFAFE}
+.alink{border:0;background:none;padding:0;font:500 14px Inter,"Segoe UI",Arial,sans-serif;color:var(--violet);cursor:pointer;text-align:left}
+.alink:hover{text-decoration:underline}
+.exall{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--violet);font:600 13px Inter,"Segoe UI",Arial,sans-serif;padding:6px 12px;cursor:pointer}
+.exall:hover{background:var(--lav)}
+@media(max-width:700px){.tf{grid-template-columns:1fr}.zm{padding:0}.zc{border-radius:0;height:100%;background:#fff}.zc .ac{box-shadow:none;border-radius:0}}
