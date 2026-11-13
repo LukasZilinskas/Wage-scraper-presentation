@@ -70,3 +70,7 @@ table.t tr.sub:hover td{background:#FBFAFE}
 .zc .ac .vr .v{font-size:42px}
 .zc .ac .vr .m{font-size:14px}
 .zc .ac .hint{font-size:13px}
+/* taškų spalvų legenda */
+.lg.dots{margin:22px 0 0;gap:26px;font-size:13px}
+.lg.dots i.c-sel{background:#fff;border:2px solid #220083;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 7px #645DC0;width:16px;height:16px;vertical-align:-3px}
+#out{margin-top:14px}

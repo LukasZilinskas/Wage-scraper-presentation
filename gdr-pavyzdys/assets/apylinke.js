@@ -16,6 +16,7 @@ const status=(v,t27,t29,low)=>{
   if(reached(v,t27,low))return{c:"ok",t:"Pasiektas 2027 m. tikslas"};
   return{c:"bad",t:"Nepasiektas 2027 m. tikslas"};
 };
+const DOT={top:"#220083",ok:"#645DC0",bad:"#C4A8F5"};
 const badge=s=>`<span class="badge ${s.c}">${s.t}</span>`;
 
 // tooltip (tas pats principas kaip ataskaitoje)
@@ -86,6 +87,8 @@ function render(){
     ]);
     $("cards").hidden=false;
   }
+  $("lgd").innerHTML=`<span><i class="c-top"></i>Pasiektas 2029 m. tikslas</span><span><i class="c-ok"></i>Pasiektas 2027 m. tikslas</span><span><i class="c-bad"></i>Nepasiektas 2027 m. tikslas</span>`
+    +(k?`<span><i class="c-sel"></i>Pasirinkta apylinkė</span>`:"");
   $("out").innerHTML=IND.map((it,n)=>card(it,n,false)).join("");
   document.querySelectorAll("#out .zb").forEach(b=>b.onclick=()=>openZoom(+b.dataset.n));
   if(zoomK!=null)fillZoom();
@@ -157,17 +160,17 @@ function chart(i,rows,r,inst,T,big){
   const lines=L.map((f,k)=>{const st=`stroke="${f[5]}" stroke-width="${f[3]}" ${f[2]?`stroke-dasharray="${f[2]}"`:""}`;
     return `<line x1="${P.l}" x2="${R}" y1="${ry[k]}" y2="${ry[k]}" ${st}/><polyline points="${R},${ry[k]} ${R+8},${ly[k]} ${R+24},${ly[k]}" fill="none" ${st}/>`
       +`<text x="${R+30}" y="${ly[k]+4}" font-size="14" fill="${f[6]}" ${f[4]?'font-weight="700"':""}>${f[1]}: ${fmt(f[0])}</text>`}).join("");
-  // kitos apylinkės: visos įstaigos vaizde – ryškesni taškai; spustelėjus pasirenkama apylinkė
-  const oc=r?"#C4A8F5":"#8F7FE0";
+  // apylinkių taškai spalvinami pagal pasiektą tikslą (kaip ataskaitos „Apylinkių palyginime“); spustelėjus pasirenkama apylinkė
   let nY=0;
-  const others=rows.filter(o=>!r||key(o)!==key(r)).map(o=>{const t=tp(`Apylinkė ${esc(o.a)}`,[["Rodiklio reikšmė",fmt(o.val)],["Tikslinė grupė",nf(o.tg)]],oc,"Spustelėkite – rodyti šią apylinkę");
+  const others=rows.filter(o=>!r||key(o)!==key(r)).map(o=>{const oc=DOT[status(o.val,o.t27,o.t29,i.lower).c]||DOT.bad;
+    const t=tp(`Apylinkė ${esc(o.a)}`,[["Rodiklio reikšmė",fmt(o.val)],["Tikslinė grupė",nf(o.tg)]],oc,"Spustelėkite – rodyti šią apylinkę");
     const dk=`data-k="${esc(key(o))}" class="pt"`;
     if(o.val>ym){nY++;const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${oc}" ${dk} ${t}/>`}
-    return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="${big?7:6}" fill="${oc}" fill-opacity=".8" stroke="#fff" stroke-width="1" ${dk} ${t}/>`}).join("");
+    return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="${big?7:6}" fill="${oc}" stroke="#fff" stroke-width="1" ${dk} ${t}/>`}).join("");
   let me="";
-  if(r){const sx=x(r.tg),sy=y(r.val),lt=fmt(r.val),lw=textW(lt,"700 16px"),right=sx+16+lw<R;
-    me=`<circle cx="${sx}" cy="${sy}" r="10" fill="#220083" stroke="#fff" stroke-width="2.5" ${tp(`Apylinkė ${esc(r.a)}`,[["Rodiklio reikšmė",fmt(r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
-    +`<text x="${right?sx+16:sx-16}" y="${sy-10}" font-size="16" font-weight="700" text-anchor="${right?"start":"end"}" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lt}</text>`}
+  if(r){const sx=x(r.tg),sy=y(r.val),lt=fmt(r.val),lw=textW(lt,"700 16px"),right=sx+20+lw<R;
+    me=`<circle cx="${sx}" cy="${sy}" r="14" fill="none" stroke="#220083" stroke-width="2"/><circle cx="${sx}" cy="${sy}" r="9" fill="${DOT[status(r.val,r.t27,r.t29,i.lower).c]||DOT.bad}" stroke="#fff" stroke-width="2.5" ${tp(`Apylinkė ${esc(r.a)}`,[["Rodiklio reikšmė",fmt(r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
+    +`<text x="${right?sx+20:sx-20}" y="${sy-12}" font-size="16" font-weight="700" text-anchor="${right?"start":"end"}" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lt}</text>`}
   const axes=`<line x1="${P.l}" x2="${P.l}" y1="${top}" y2="${bot}" stroke="#220083"/><line x1="${P.l}" x2="${R}" y1="${bot}" y2="${bot}" stroke="#220083"/>`
     +`<text x="${(P.l+R)/2}" y="${H-8}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>`
     +`<text transform="translate(14 ${(top+bot)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text>`;
