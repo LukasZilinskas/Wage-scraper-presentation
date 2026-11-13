@@ -1,0 +1,23 @@
+/* Bandomasis apylinkės puslapis – papildomi stiliai prie app.css */
+.beta{display:inline-block;margin-left:10px;padding:3px 10px;border-radius:12px;background:var(--lav);color:var(--violet);font-size:12px;font-weight:700;vertical-align:2px}
+.pick{max-width:640px;margin:0 auto}
+.pick label{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+.pick .row{display:flex;gap:8px;align-items:center;margin-top:6px}
+.pick select{margin-top:0}
+.pick button{flex:none;width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--violet);font:700 18px Inter,"Segoe UI",Arial,sans-serif;cursor:pointer}
+.pick button:hover:not(:disabled){background:var(--lav)}
+.pick button:disabled{opacity:.35;cursor:default}
+.note{text-align:center;color:var(--mut);font-size:13px;margin:10px 0 24px}
+#cards{margin-bottom:8px}
+.lg.key{margin:22px 0 4px;gap:22px;font-size:13px;color:#44464B}
+.lg.key svg{width:26px;height:14px;vertical-align:-2px;margin-right:6px}
+.ac{border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:18px;background:#fff}
+.ag{display:grid;grid-template-columns:minmax(220px,1fr) 2fr;gap:12px 32px;align-items:start;margin-top:4px}
+.ag .big{margin:10px 0 4px}
+.meta{font-size:13px;color:#44464B}.meta b{color:var(--violet)}
+table.cmp{font-size:13px;margin-top:8px}
+table.cmp th,table.cmp td{padding:7px 10px}
+table.cmp td .badge{font-size:12px;padding:3px 10px;display:inline-block}
+svg.strip{width:100%;height:auto;display:block;margin-top:10px}
+.empty.sm{padding:18px 0 6px;font-size:14px}
+@media(max-width:820px){.ag{grid-template-columns:1fr}}
