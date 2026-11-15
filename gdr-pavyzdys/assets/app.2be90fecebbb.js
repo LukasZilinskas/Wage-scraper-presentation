@@ -267,9 +267,13 @@ const verBtns=[...document.querySelectorAll("#tabs .ver button")];
 let v2done=false;
 function setVer(v){
   document.body.classList.toggle("ver2",v==="2");
+  document.body.classList.toggle("ver3",v==="3");
   verBtns.forEach(b=>{const a=b.dataset.v===v;b.classList.toggle("active",a);b.setAttribute("aria-pressed",a)});
-  if(v==="2"&&!v2done){v2done=true;renderV2()}
+  // 3 versija nuo 2-osios skiriasi tik apylinkių skirtuku; rodiklių ir šalies skirtukai bendri
+  if(v!=="1"&&!v2done){v2done=true;renderV2()}
+  if(v==="3"&&!v3done){v3done=true;apyl3()}
 }
+let v3done=false;
 verBtns.forEach(b=>b.onclick=()=>setVer(b.dataset.v));
 function renderV2(){
   $("ind2").innerHTML=D.indicators.map(i=>`<div class="panel stack">${indHTML(i)}</div>`).join("");
@@ -461,4 +465,72 @@ function apyl2(){
   }
 
   render();
+}
+
+// ===== 3 versija: apylinkių skirtukas =====
+// Kiekvienam rodikliui – apylinkės eilutėmis, surikiuotos nuo geriausios, su numeriu, atstumu iki 2027 m. tikslo
+// ir (dalies rodikliams) asmenų skaičiumi, kurio trūksta iki tikslo. Taško dydis – tikslinė grupė.
+// Kai apylinkių daugiau nei ROWS_MAX, rodomas taškinis grafikas ir 10 apylinkių, labiausiai nutolusių nuo tikslo.
+function apyl3(){
+  const ROWS_MAX=40,TOP=10;
+  if(!Object.keys(D.apyl).length){$("ov3").innerHTML=`<div class="empty">Šiai įstaigai apylinkių duomenų nėra.</div>`;return}
+  const multiPc=new Set(Object.values(D.apyl).flat().map(r=>r.pc??"–")).size>1;
+  const gap=(i,v)=>i.lower?v-i.t27:i.t27-v;                      // >0 – nepasiekta
+  // kiek asmenų trūksta iki 2027 m. tikslo (tik dalies rodikliams, kur reikšmė = pasiekusių dalis tikslinėje grupėje)
+  const need=(i,tg,v)=>i.pct&&i.t27!=null&&v!=null&&tg>0?Math.max(0,Math.ceil(i.t27*tg-1e-9)-Math.round(v*tg)):null;
+  const asm=n=>`${nf(n)} asm.`;
+
+  function rowsChart(i,rows){
+    const W=900,RH=26,T=34,B=58,H=T+rows.length*RH+B,L=multiPc?285:170,R=i.pct?760:860,X0=L+20;
+    const inst=i.vals[lastIdx(i.vals)];
+    const xt=capY(i,ticks(Math.max(...rows.map(r=>r.val),i.t27??0,inst??0)*1.05,5)),xm=xt[xt.length-1];
+    const x=v=>X0+Math.min(v,xm)/xm*(R-X0),top=T-8,bot=H-B+4;
+    const hd=`font-size="12" fill="#8A87A8"`;
+    let out=`<text x="0" y="14" ${hd}>Apylinkė${multiPc?" · prisirašymo kodas":""}</text><text x="${L}" y="14" ${hd} text-anchor="end">Tikslinė grupė</text>`
+      +(i.pct?`<text x="${W}" y="14" ${hd} text-anchor="end">Trūksta iki 2027 m. tikslo</text>`:"");
+    // kas antra eilutė patamsinta (po linijomis), kad akis nepamestų eilutės tarp numerio ir reikšmės
+    out+=rows.map((r,k)=>k%2?`<rect x="0" y="${T+k*RH}" width="${W}" height="${RH}" fill="#F7F6FC"/>`:"").join("");
+    if(i.t27!=null){const xt27=x(i.t27),zx=i.lower?X0:xt27,zw=i.lower?xt27-X0:R-xt27;
+      out+=`<rect x="${zx}" y="${top}" width="${Math.max(0,zw)}" height="${bot-top}" fill="#009870" fill-opacity=".05"/>`}
+    out+=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${top}" y2="${bot}" stroke="${v?"#E6E4F5":"#220083"}"/>`+(v?`<text x="${x(v)}" y="${bot+16}" font-size="12" text-anchor="middle" fill="#220083">${ft(i,v)}</text>`:"")).join("");
+    // tikslo ir įstaigos linijos; užrašai po ašimi dviem eilutėmis, kad nesusidurtų
+    const ref=(v,lbl,dy,st,bold)=>{const tx=Math.max(X0+70,Math.min(R-70,x(v)));
+      return `<line x1="${x(v)}" x2="${x(v)}" y1="${top-4}" y2="${bot}" ${st}/><text x="${tx}" y="${bot+dy}" font-size="12" text-anchor="middle" fill="#220083" ${bold?'font-weight="700"':""}>${lbl}: ${fv(i,v)}</text>`};
+    if(inst!=null)out+=ref(inst,"Įstaiga",50,`stroke="#220083" stroke-width="1.5" stroke-dasharray="2 4"`,0);
+    if(i.t27!=null)out+=ref(i.t27,"2027 m. tikslas",33,`stroke="#645DC0" stroke-width="2"`,1);
+    const maxNeed=Math.max(0,...rows.map(r=>need(i,r.tg,r.val)??0));
+    out+=rows.map((r,k)=>{
+      const y=T+k*RH+RH/2,s=status(r.val,i.t27,i.t29,i.lower),c=ST_C[s.c]||ST_C.bad,cx=x(r.val),rad=Math.max(4,Math.min(10,3.5+Math.sqrt(r.tg)/2.2));
+      const n=need(i,r.tg,r.val),lbl=fv(i,r.val),lw=textW(lbl,"13px")+8;
+      // reikšmės užrašas – toje taško pusėje, kur nėra brūkšnio iki tikslo; jei netelpa – kitoje
+      let left=i.t27!=null&&s.c==="bad"?cx<x(i.t27):false;
+      if(left&&cx-rad-lw<X0)left=false;if(!left&&cx+rad+lw>R)left=true;
+      const tip=tp(`Apylinkė ${esc(r.a)}`,[["Prisirašymo įstaigos kodas",esc(r.pc??"–")],["Rodiklio reikšmė",lbl],["Tikslinė grupė",nf(r.tg)]].concat(n?[["Trūksta iki 2027 m. tikslo",asm(n)]]:[]).concat([["",s.t]]),c);
+      return `<text x="0" y="${y+4}" font-size="13" fill="#1F2937">Apylinkė ${esc(r.a)}${multiPc?`<tspan fill="#8A87A8"> · ${esc(r.pc??"–")}</tspan>`:""}</text>`
+        +`<text x="${L}" y="${y+4}" font-size="13" text-anchor="end" fill="#8A87A8">${nf(r.tg)}</text>`
+        +(s.c==="bad"&&i.t27!=null?`<line x1="${cx}" x2="${x(i.t27)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="2" stroke-opacity=".55"/>`:"")
+        +`<circle cx="${cx}" cy="${y}" r="${rad}" fill="${c}" stroke="#fff" stroke-width="1" ${tip}/>`
+        +`<text x="${left?cx-rad-5:cx+rad+5}" y="${y+4}" font-size="13" text-anchor="${left?"end":"start"}" fill="#1F2937" stroke="${k%2?"#F7F6FC":"#fff"}" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lbl}</text>`
+        +(n?`<text x="${W}" y="${y+4}" font-size="13" text-anchor="end" fill="#1F2937" ${n===maxNeed?'font-weight="700"':""}>${asm(n)}</text>`:"");
+    }).join("");
+    return `<div class="tw3"><svg class="rc" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(i.name)}: apylinkės, surikiuotos pagal reikšmę, ir atstumas iki 2027 m. tikslo">${out}</svg></div>`;
+  }
+
+  $("ov3").innerHTML=`<div class="lg dots"><span><i class="c-top"></i>Pasiektas 2029 m. tikslas</span><span><i class="c-ok"></i>Pasiektas 2027 m. tikslas</span><span><i class="c-bad"></i>Nepasiektas 2027 m. tikslas</span></div>`
+   +D.indicators.map(i=>{
+    const inst=i.vals[lastIdx(i.vals)],s=iStatus(i,inst);
+    const all=(D.apyl[i.nr]||[]).filter(r=>r.val!=null&&r.tg>0),ok=all.filter(r=>gap(i,r.val)<=0).length;
+    const head=`<div class="ph"><b>${esc(i.name)}</b><span class="badge ${s.c}">${s.t}</span></div>`;
+    if(!all.length)return `<div class="panel stack">${head}<div class="empty sm">Šiam rodikliui apylinkių duomenų nėra. Įstaigos reikšmė: <b>${fv(i,inst)}</b>.</div></div>`;
+    const ni=i.tg>0?need(i,i.tg,inst):null;
+    const meta=`<div class="vr"><span class="v">${fv(i,inst)}</span><span class="m">Apylinkių, pasiekusių 2027 m. tikslą: <b>${ok}</b> iš ${all.length}`
+      +(ni?`<br>Įstaigai iki 2027 m. tikslo trūksta: <b>${asm(ni)}</b>`:"")+`</span></div>`;
+    const best=[...all].sort((p,q)=>i.lower?p.val-q.val:q.val-p.val);
+    if(all.length<=ROWS_MAX)return `<div class="panel stack">${head}${meta}${rowsChart(i,best)}</div>`;
+    // didelė įstaiga: bendras vaizdas taškais ir apylinkės, kurių atstumas iki tikslo, padaugintas iš tikslinės grupės, didžiausias
+    const worst=all.filter(r=>gap(i,r.val)>0).sort((p,q)=>gap(i,q.val)*q.tg-gap(i,p.val)*p.tg).slice(0,TOP);
+    return `<div class="panel stack">${head}${meta}${scatter(i,all.map(r=>({a:r.a,pc:r.pc??"–",v:r.val,g:r.tg})))}`
+      +(worst.length?`<div class="thead"><h2>${worst.length} apylinkių, labiausiai nutolusių nuo 2027 m. tikslo</h2><span>atsižvelgiant į tikslinę grupę, iš ${all.length}</span></div>${rowsChart(i,worst)}`
+        :`<div class="empty sm">Visos apylinkės pasiekė 2027 m. tikslą.</div>`)+`</div>`;
+  }).join("");
 }
