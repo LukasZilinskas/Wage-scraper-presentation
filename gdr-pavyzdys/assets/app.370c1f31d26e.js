@@ -455,7 +455,7 @@ function apylReitingas(){
     const xt=capY(i,ticks(Math.max(...rows.map(r=>r.val),i.t27??0,inst??0)*1.05,5)),xm=xt[xt.length-1];
     const x=v=>X0+Math.min(v,xm)/xm*(R-X0),top=T-8,bot=H-B+4;
     const hd=`font-size="12" fill="#8A87A8"`;
-    let out=`<text x="0" y="44" ${hd}>Apylinkė${multiPc?" · prisirašymo kodas":""}</text><text x="${L}" y="44" ${hd} text-anchor="end">Tikslinė grupė</text>`
+    let out=`<text x="0" y="44" ${hd}>Apylinkė${multiPc?" · įstaigos kodas":""}</text><text x="${L}" y="44" ${hd} text-anchor="end">Tikslinė grupė</text>`
       +(hasNeed(i)?`<text x="${W}" y="44" ${hd} text-anchor="end">${needH(i)}</text>`:"");
     // kas antra eilutė patamsinta (po linijomis), kad akis nepamestų eilutės tarp numerio ir reikšmės
     out+=rows.map((r,k)=>k%2?`<rect x="0" y="${T+k*RH}" width="${W}" height="${RH}" fill="#F7F6FC"/>`:"").join("");
