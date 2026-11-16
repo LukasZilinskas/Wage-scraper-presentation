@@ -69,7 +69,7 @@ const dotC=i=>i.tg>0?(i.mokama>0?"ok":"bad"):"na";
 $("cards").innerHTML=[
  ["Mokėtina ketvirtinė suma",eur(mokama),1],
  ["Galima ketvirtinė suma",eur(galima)],
- ["Realizuota dalis",galima>0?Math.round(mokama/galima*100)+"%":"–"],  // be tikslinės grupės galima suma 0 – dalies nėra
+ ["Realizuota dalis",galima>0?Math.round(mokama/galima*100)+" %":"–"],  // be tikslinės grupės galima suma 0 – dalies nėra
  ["Pasiekti rodikliai",reached+" iš "+vertinami]
 ].map(c=>`<div class="card${c[2]?" main":""}"><div class="l">${c[0]}</div><div class="v">${c[1]}</div></div>`).join("");
 const nf=v=>v==null?"–":Number(v).toLocaleString("lt-LT",{maximumFractionDigits:0});
