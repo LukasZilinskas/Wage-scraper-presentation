@@ -313,7 +313,7 @@ function apylTaskai(){
     const prev=sel.value;
     sel.innerHTML="";
     sel.add(new Option(fil==="*"?"Visos apylinkės (visa įstaiga)":"Visos filialo apylinkės",""));
-    list.filter(([,v])=>fil==="*"||v.pc===fil).forEach(([k,v])=>sel.add(new Option(v.a+(multiPc&&fil==="*"?` · kodas ${v.pc}`:""),k)));
+    list.filter(([,v])=>fil==="*"||v.pc===fil).forEach(([k,v])=>sel.add(new Option(v.a+(multiPc&&fil==="*"?` (įstaiga ${v.pc})`:""),k)));
     sel.value=[...sel.options].some(o=>o.value===prev)?prev:"";
   };
   fillSel();
