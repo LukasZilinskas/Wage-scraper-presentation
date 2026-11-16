@@ -234,7 +234,7 @@ const swB=[...document.querySelectorAll("#ovSw button")];
 function rodykGrafika(g){
   graf=g;
   swB.forEach(o=>{const a=o.dataset.g===g;o.classList.toggle("active",a);o.setAttribute("aria-pressed",a)});
-  $("ovDydis").hidden=g!=="dydis";$("ovReit").hidden=g!=="reitingas";
+  $("ovDydis").hidden=$("aPick").hidden=g!=="dydis";$("ovReit").hidden=g!=="reitingas";
 }
 swB.forEach(b=>b.onclick=()=>{rodykGrafika(b.dataset.g);adresas()});
 if(Object.keys(D.apyl).length){apylTaskai();apylReitingas();rodykGrafika(graf)}
