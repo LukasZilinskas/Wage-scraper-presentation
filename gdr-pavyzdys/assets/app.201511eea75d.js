@@ -104,8 +104,6 @@ const capY=(i,a)=>{const b=i.pct?a.filter(v=>v<=1+1e-9):a;return b.length>1?b:a}
 // Apylinkių taškų spalvos grafikuose pagal pasiektą tikslą – violetiniai atspalviai nuo šviesiausio (nepasiektas 2027 m.)
 // iki tamsiausio (pasiektas 2029 m.); tos pačios reikšmės legendoje (app.css: .c-bad, .c-ok, .c-top)
 const ST_C={bad:"#C4A8F5",ok:"#645DC0",top:"#220083"};
-// šviesiausias taškas baltame fone blankus, todėl jam – tamsesnis kontūras; kitiems – baltas
-const dotS=c=>`stroke="${c===ST_C.bad?ST_C.ok:"#fff"}" stroke-width="1"`;
 // ašių žymos: dalims – procentai be nereikalingų nulių
 const ft=(i,v)=>i.pct?(+(v*100).toFixed(4)).toLocaleString("lt-LT",{maximumFractionDigits:2})+" %":fmt(v);
 function lineChart(i){
@@ -178,11 +176,11 @@ function countryChart(i){
   const tl=targetLines(i,y,P,W,H),ry=tl.ry;
   // taškai: viduje – apskritimai; už Y ribų – ▲ viršuje; už X ribų – ▶ dešinėje
   const tip=(p,o)=>tp("<b>Kita įstaiga</b>",[["Tikslinė grupė",nf(p[0])],["Rodiklio reikšmė",fv(i,p[1])]].concat(o?[["","už skalės ribų"]]:[]),"#B9A3F0");
-  const F='fill="#B9A3F0" stroke="#645DC0" stroke-width=".8"';  // apvadas kaip apylinkių grafikų šviesiųjų taškų
+  const F='fill="#B9A3F0"';
   const dots=pe.map(p=>{
     const oy=p[1]>ym,ox=p[0]>xmax;
     const cx=x(p[0]),cy=y(p[1]);
-    if(!oy&&!ox)return `<circle cx="${cx}" cy="${cy}" r="4.5" ${F} fill-opacity=".55" stroke-opacity=".7" ${tip(p)}/>`;
+    if(!oy&&!ox)return `<circle cx="${cx}" cy="${cy}" r="4.5" ${F} fill-opacity=".55" stroke="#fff" stroke-width=".8" ${tip(p)}/>`;
     if(oy){const tx=ox?cx-6:cx,ty=P.t+2;return `<path d="M${tx-5},${ty+8}L${tx+5},${ty+8}L${tx},${ty}Z" ${F} ${tip(p,1)}/>`}
     const tx=W-P.r-2;return `<path d="M${tx-8},${cy-5}L${tx-8},${cy+5}L${tx},${cy}Z" ${F} ${tip(p,1)}/>`;
   }).join("");
@@ -433,8 +431,8 @@ function apylTaskai(){
     const others=rows.filter(o=>!r||raktas(o)!==raktas(r)).map(o=>{const oc=ST_C[status(o.val,o.t27,o.t29,i.lower).c]||ST_C.bad;
       const t=tp(`${esc(o.a)} apylinkė`,[["Rodiklio reikšmė",fv(i,o.val)],["Tikslinė grupė",nf(o.tg)],["","Spustelėkite – rodyti šią apylinkę"]],oc);
       const dk=`data-k="${esc(raktas(o))}" class="pt"`;
-      if(o.val>ym){const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${oc}" ${dotS(oc)} ${dk} ${t}/>`}
-      return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="${big?7:6}" fill="${oc}" ${dotS(oc)} ${dk} ${t}/>`}).join("");
+      if(o.val>ym){const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${oc}" ${dk} ${t}/>`}
+      return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="${big?7:6}" fill="${oc}" stroke="#fff" stroke-width="1" ${dk} ${t}/>`}).join("");
     let me="";
     if(r){const sx=x(r.tg),sy=y(r.val),lt=fv(i,r.val),lw=textW(lt,"700 16px"),right=sx+20+lw<R;
       me=`<circle cx="${sx}" cy="${sy}" r="14" fill="none" stroke="#220083" stroke-width="2"/><circle cx="${sx}" cy="${sy}" r="9" fill="${ST_C[status(r.val,r.t27,r.t29,i.lower).c]||ST_C.bad}" stroke="#fff" stroke-width="2.5" ${tp(`${esc(r.a)} apylinkė`,[["Rodiklio reikšmė",fv(i,r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
@@ -539,7 +537,7 @@ function apylReitingas(){
       return `<text x="0" y="${y+4}" font-size="13" fill="#1F2937">${esc(r.a)} apylinkė${multiPc?`<tspan fill="#8A87A8"> · ${esc(r.pc??"–")}</tspan>`:""}</text>`
         +`<text x="${L}" y="${y+4}" font-size="13" text-anchor="end" fill="#8A87A8">${nf(r.tg)}</text>`
         +(s.c==="bad"&&i.t27!=null?`<line x1="${cx}" x2="${x(i.t27)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="2" stroke-opacity=".55"/>`:"")
-        +`<circle cx="${cx}" cy="${y}" r="${rad}" fill="${c}" ${dotS(c)} ${tip}/>`
+        +`<circle cx="${cx}" cy="${y}" r="${rad}" fill="${c}" stroke="#fff" stroke-width="1" ${tip}/>`
         +`<text x="${left?cx-rad-5:cx+rad+5}" y="${y+4}" font-size="13" text-anchor="${left?"end":"start"}" fill="#1F2937" stroke="${k%2?"#F7F6FC":"#fff"}" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lbl}</text>`
         +(n?`<text x="${W}" y="${y+4}" font-size="13" text-anchor="end" fill="#1F2937" ${n===maxNeed?'font-weight="700"':""}>${kiek(i,n)}</text>`:"");
     }).join("");
