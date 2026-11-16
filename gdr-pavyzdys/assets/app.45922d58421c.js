@@ -431,13 +431,13 @@ function apylTaskai(){
         +`<text x="${R+30}" y="${ly[k]+4}" font-size="14" fill="${f[6]}" ${f[4]?'font-weight="700"':""}>${f[1]}: ${fv(i,f[0])}</text>`}).join("");
     // apylinkių taškai spalvinami pagal pasiektą tikslą; spustelėjus pasirenkama apylinkė
     const others=rows.filter(o=>!r||raktas(o)!==raktas(r)).map(o=>{const oc=ST_C[status(o.val,o.t27,o.t29,i.lower).c]||ST_C.bad;
-      const t=tp(`Apylinkė ${esc(o.a)}`,[["Rodiklio reikšmė",fv(i,o.val)],["Tikslinė grupė",nf(o.tg)],["","Spustelėkite – rodyti šią apylinkę"]],oc);
+      const t=tp(`${esc(o.a)} apylinkė`,[["Rodiklio reikšmė",fv(i,o.val)],["Tikslinė grupė",nf(o.tg)],["","Spustelėkite – rodyti šią apylinkę"]],oc);
       const dk=`data-k="${esc(raktas(o))}" class="pt"`;
       if(o.val>ym){const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${oc}" ${dotS(oc)} ${dk} ${t}/>`}
       return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="${big?7:6}" fill="${oc}" ${dotS(oc)} ${dk} ${t}/>`}).join("");
     let me="";
     if(r){const sx=x(r.tg),sy=y(r.val),lt=fv(i,r.val),lw=textW(lt,"700 16px"),right=sx+20+lw<R;
-      me=`<circle cx="${sx}" cy="${sy}" r="14" fill="none" stroke="#220083" stroke-width="2"/><circle cx="${sx}" cy="${sy}" r="9" fill="${ST_C[status(r.val,r.t27,r.t29,i.lower).c]||ST_C.bad}" stroke="#fff" stroke-width="2.5" ${tp(`Apylinkė ${esc(r.a)}`,[["Rodiklio reikšmė",fv(i,r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
+      me=`<circle cx="${sx}" cy="${sy}" r="14" fill="none" stroke="#220083" stroke-width="2"/><circle cx="${sx}" cy="${sy}" r="9" fill="${ST_C[status(r.val,r.t27,r.t29,i.lower).c]||ST_C.bad}" stroke="#fff" stroke-width="2.5" ${tp(`${esc(r.a)} apylinkė`,[["Rodiklio reikšmė",fv(i,r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
       +`<text x="${right?sx+20:sx-20}" y="${sy-12}" font-size="16" font-weight="700" text-anchor="${right?"start":"end"}" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lt}</text>`}
     const axes=`<line x1="${P.l}" x2="${P.l}" y1="${top}" y2="${bot}" stroke="#220083"/><line x1="${P.l}" x2="${R}" y1="${bot}" y2="${bot}" stroke="#220083"/>`
       +`<text x="${(P.l+R)/2}" y="${H-8}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>`
@@ -465,7 +465,7 @@ function apylTaskai(){
         if(rs.length)ex0.push(n);
         const nm=rs.length?`<button type="button" class="ex" data-x="${n}" aria-expanded="${ex}"><span class="ar"></span>${esc(i.name)}</button>`:`<span class="ex">${esc(i.name)}</span>`;
         body+=`<tr class="aind${ex?" open":""}"><td>${nm}<small>Visa įstaiga · ${instQ} · ${rs.length?plural(rs.length,"apylinkė","apylinkės","apylinkių"):"apylinkių duomenų nėra"}</small></td>${pcCol?`<td class="pi">–</td>`:""}<td class="g">${nf(i.tg)}</td><td class="k">${fv(i,inst)}</td><td>${badge(iStatus(i,inst))}</td></tr>`;
-        if(ex)body+=rs.map(r=>`<tr class="asub"><td><button type="button" class="alink" data-k="${esc(raktas(r))}">Apylinkė ${esc(r.a)}</button></td>${pcCol?`<td class="pi">${esc(r.pc??"–")}</td>`:""}<td class="g">${nf(r.tg)}</td><td class="k">${fv(i,r.val)}</td><td>${badge(status(r.val,r.t27,r.t29,i.lower))}</td></tr>`).join("");
+        if(ex)body+=rs.map(r=>`<tr class="asub"><td><button type="button" class="alink" data-k="${esc(raktas(r))}">${esc(r.a)} apylinkė</button></td>${pcCol?`<td class="pi">${esc(r.pc??"–")}</td>`:""}<td class="g">${nf(r.tg)}</td><td class="k">${fv(i,r.val)}</td><td>${badge(status(r.val,r.t27,r.t29,i.lower))}</td></tr>`).join("");
       });
       if(!shown)body="";
       const allOpen=ex0.length&&ex0.every(n=>opened.has(n));
@@ -475,7 +475,7 @@ function apylTaskai(){
       $("aTt").querySelectorAll("button.ex").forEach(b=>b.onclick=()=>{const n=+b.dataset.x;opened.has(n)?opened.delete(n):opened.add(n);renderTable();const f=$("aTt").querySelector(`button.ex[data-x="${n}"]`);if(f)f.focus()});
       return;
     }
-    $("aTh").textContent="Apylinkė "+sel.options[sel.selectedIndex].text+" – duomenys";
+    $("aTh").textContent=sel.options[sel.selectedIndex].text+" – apylinkės duomenys";
     const rs=its.map(it=>({...it,r:it.rows.find(o=>raktas(o)===k)})).filter(x=>x.r&&pass(x.r.val,x.r.t27,x.r.t29,x.i.lower));
     cnt=rs.length;
     if(cnt)body=`<tr><th scope="col">Rodiklis</th><th scope="col">Tikslinė grupė</th><th scope="col">Apylinkės reikšmė</th><th scope="col">Įstaigos reikšmė</th><th scope="col">Šalies reikšmė</th><th scope="col">Vieta</th><th scope="col">Būsena</th></tr>`
@@ -535,8 +535,8 @@ function apylReitingas(){
       // reikšmės užrašas – toje taško pusėje, kur nėra brūkšnio iki tikslo; jei netelpa – kitoje
       let left=i.t27!=null&&s.c==="bad"?cx<x(i.t27):false;
       if(left&&cx-rad-lw<X0)left=false;if(!left&&cx+rad+lw>R)left=true;
-      const tip=tp(`Apylinkė ${esc(r.a)}`,[["Prisirašymo įstaigos kodas",esc(r.pc??"–")],["Rodiklio reikšmė",lbl],["Tikslinė grupė",nf(r.tg)]].concat(n?[[needH(i),kiek(i,n)]]:[]).concat([["",s.t]]),c);
-      return `<text x="0" y="${y+4}" font-size="13" fill="#1F2937">Apylinkė ${esc(r.a)}${multiPc?`<tspan fill="#8A87A8"> · ${esc(r.pc??"–")}</tspan>`:""}</text>`
+      const tip=tp(`${esc(r.a)} apylinkė`,[["Prisirašymo įstaigos kodas",esc(r.pc??"–")],["Rodiklio reikšmė",lbl],["Tikslinė grupė",nf(r.tg)]].concat(n?[[needH(i),kiek(i,n)]]:[]).concat([["",s.t]]),c);
+      return `<text x="0" y="${y+4}" font-size="13" fill="#1F2937">${esc(r.a)} apylinkė${multiPc?`<tspan fill="#8A87A8"> · ${esc(r.pc??"–")}</tspan>`:""}</text>`
         +`<text x="${L}" y="${y+4}" font-size="13" text-anchor="end" fill="#8A87A8">${nf(r.tg)}</text>`
         +(s.c==="bad"&&i.t27!=null?`<line x1="${cx}" x2="${x(i.t27)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="2" stroke-opacity=".55"/>`:"")
         +`<circle cx="${cx}" cy="${y}" r="${rad}" fill="${c}" ${dotS(c)} ${tip}/>`
