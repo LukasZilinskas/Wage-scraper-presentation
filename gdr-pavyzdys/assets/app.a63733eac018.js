@@ -176,11 +176,11 @@ function countryChart(i){
   const tl=targetLines(i,y,P,W,H),ry=tl.ry;
   // taškai: viduje – apskritimai; už Y ribų – ▲ viršuje; už X ribų – ▶ dešinėje
   const tip=(p,o)=>tp("<b>Kita įstaiga</b>",[["Tikslinė grupė",nf(p[0])],["Rodiklio reikšmė",fv(i,p[1])]].concat(o?[["","už skalės ribų"]]:[]),"#B9A3F0");
-  const F='fill="#B9A3F0"';
+  const F='fill="#B9A3F0" stroke="#645DC0" stroke-width=".8"';  // apvadas kaip apylinkių grafikų šviesiųjų taškų
   const dots=pe.map(p=>{
     const oy=p[1]>ym,ox=p[0]>xmax;
     const cx=x(p[0]),cy=y(p[1]);
-    if(!oy&&!ox)return `<circle cx="${cx}" cy="${cy}" r="4.5" ${F} fill-opacity=".55" stroke="#fff" stroke-width=".8" ${tip(p)}/>`;
+    if(!oy&&!ox)return `<circle cx="${cx}" cy="${cy}" r="4.5" ${F} fill-opacity=".55" stroke-opacity=".7" ${tip(p)}/>`;
     if(oy){const tx=ox?cx-6:cx,ty=P.t+2;return `<path d="M${tx-5},${ty+8}L${tx+5},${ty+8}L${tx},${ty}Z" ${F} ${tip(p,1)}/>`}
     const tx=W-P.r-2;return `<path d="M${tx-8},${cy-5}L${tx-8},${cy+5}L${tx},${cy}Z" ${F} ${tip(p,1)}/>`;
   }).join("");
@@ -222,7 +222,7 @@ $("ind").innerHTML=D.indicators.map((i,n)=>`<div class="panel" data-rod="${n}">$
 $("co").innerHTML=D.indicators.map((i,n)=>`<div class="panel" data-rod="${n}"><div class="ph"><b>${esc(i.name)}</b></div>${countryChart(i)}</div>`).join("");
 
 // ===== Apylinkių palyginimas =====
-// Du grafikai, perjungiami mygtukais: „Pagal tikslinės grupės dydį“ (taškinė diagrama, numatytasis) ir „Apylinkių reitingas“.
+// Du grafikai, perjungiami mygtukais: „Taškinė diagrama“ (numatytasis) ir „Apylinkių reitingas“.
 // Apylinkės su tuščia tiksline grupe (0) neturi prasmingos reikšmės – nelyginamos.
 const pasiekta=(v,t,low)=>t!=null&&v!=null&&(low?v<=t:v>=t);
 const raktas=r=>r.a+"|"+(r.pc??"–");  // apylinkė + prisirašymo įstaigos kodas
@@ -243,7 +243,7 @@ if(Object.keys(D.apyl).length){apylTaskai();apylReitingas();rodykGrafika(graf)}
 else{graf=GRAF[0];$("ovBar").hidden=true;$("ovDydis").innerHTML=`<div class="empty">Šiai įstaigai apylinkių duomenų nėra.</div>`}
 rodRodyk();adresas();
 
-// Grafikas „Pagal tikslinės grupės dydį“: visi rodikliai vienoje vietoje (visa įstaiga arba pasirinkta apylinkė) ir duomenų lentelė.
+// Grafikas „Taškinė diagrama“: visi rodikliai vienoje vietoje (visa įstaiga arba pasirinkta apylinkė) ir duomenų lentelė.
 function apylTaskai(){
   const better=(a,b,low)=>low?a<b:a>b;
   const badge=s=>`<span class="badge ${s.c}">${s.t}</span>`;
