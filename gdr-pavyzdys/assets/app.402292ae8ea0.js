@@ -59,6 +59,8 @@ document.addEventListener("mousemove",e=>{
   tipEl.style.left=Math.max(8,x)+"px";tipEl.style.top=Math.max(8,y)+"px";
 });
 $("period").textContent=D.period;
+// atidaro naršyklės spausdinimo langą; jame galima pasirinkti „Įrašyti kaip PDF“ (išdėstymas – app.css @media print)
+$("pdf").onclick=()=>window.print();
 const galima=D.indicators.reduce((s,i)=>s+i.galima,0);
 const mokama=D.indicators.reduce((s,i)=>s+i.mokama,0);
 const reached=D.indicators.filter(i=>i.mokama>0).length;
@@ -255,7 +257,7 @@ function apylTaskai(){
   const pcs=[...new Set(list.map(([,v])=>v.pc))],multiPc=pcs.length>1;
   const sel=$("aSel");
   sel.add(new Option("Visos apylinkės (visa įstaiga)",""));
-  list.forEach(([k,v])=>sel.add(new Option(`Apylinkė ${v.a}`+(multiPc?` (prisirašymo įstaiga ${v.pc})`:""),k)));
+  list.forEach(([k,v])=>sel.add(new Option(`Apylinkė ${v.a}`+(multiPc?` · kodas ${v.pc}`:""),k)));
 
   const rankOf=(it,r)=>[...it.rows].sort((p,q)=>it.i.lower?p.val-q.val:q.val-p.val).findIndex(x=>raktas(x)===raktas(r))+1;
 
