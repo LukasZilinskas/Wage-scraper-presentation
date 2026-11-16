@@ -500,13 +500,13 @@ function apylReitingas(){
     // nuo prasčiausios reikšmės iki geriausios (pagal rodiklio kryptį)
     const eile=a=>[...a].sort((p,q)=>i.lower?q.val-p.val:p.val-q.val);
     if(rows.length<=ROWS_MAX)return `${open}${head}${meta}${rowsChart(i,eile(rows))}</div>`;
-    // didelė įstaiga: iš pradžių tik apylinkės, kurių atstumas iki tikslo, padaugintas iš tikslinės grupės, didžiausias
+    // didelė įstaiga: iš pradžių – pirmosios TOP to paties sąrašo eilutės (prasčiausios, tik nepasiekusios tikslo)
     const btn=t=>`<button type="button" class="exall" data-vis="${n}">${t}</button>`;
     if(visos.has(n))return `${open}${head}${meta}<div class="thead"><h2>Visos apylinkės</h2><span>${rows.length}, nuo prasčiausios iki geriausios reikšmės</span>${btn("Rodyti tik labiausiai nutolusias")}</div>${rowsChart(i,eile(rows))}</div>`;
-    const worst=rows.filter(r=>gap(i,r.val)>0).sort((p,q)=>gap(i,q.val)*q.tg-gap(i,p.val)*p.tg).slice(0,TOP);
+    const worst=eile(rows.filter(r=>gap(i,r.val)>0)).slice(0,TOP);
     return `${open}${head}${meta}<div class="thead"><h2>${worst.length?"Labiausiai nuo 2027 m. tikslo nutolusios apylinkės":"Visos apylinkės pasiekė 2027 m. tikslą"}</h2>`
-      +(worst.length?`<span>${worst.length} iš ${rows.length}, atsižvelgiant į tikslinę grupę</span>`:"")+btn(`Rodyti visas apylinkes (${rows.length})`)+`</div>`
-      +(worst.length?rowsChart(i,eile(worst)):"")+`</div>`;
+      +(worst.length?`<span>${worst.length} prasčiausios iš ${rows.length}</span>`:"")+btn(`Rodyti visas apylinkes (${rows.length})`)+`</div>`
+      +(worst.length?rowsChart(i,worst):"")+`</div>`;
   }
   const piesk=()=>{$("ovReit").innerHTML=`<div class="lg dots">${LEG}</div><div class="stackw">${IND.map(kortele).join("")}</div>`};
   $("ovReit").onclick=e=>{
