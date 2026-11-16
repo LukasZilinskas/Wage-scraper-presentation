@@ -127,7 +127,7 @@ function indHTML(i){
   // jei rodiklis neturi nė vienos reikšmės, rodoma „–“ (anksčiau paieška čia nesibaigdavo ir puslapis užstrigdavo)
   // be tikslinės grupės rodiklis nevertinamas, todėl vietoj reikšmės (0) rodoma „–“
   const li=lastIdx(i.vals),cur=li>=0&&i.tg>0?i.vals[li]:null,s=iStatus(i,cur);
-  return `<div class="ph"><div><b>${esc(i.name)}</b><div class="s">Siektina reikšmė – ${i.lower?"mažesnė":"didesnė"}. Reikšmė skaičiuojama už keturis ketvirčius, kurie baigiasi nurodytu ketvirčiu.</div></div><span class="badge ${s.c}">${s.t}</span></div>
+  return `<div class="ph"><div><b>${esc(i.name)}</b><div class="s">Siektina reikšmė – ${i.lower?"mažesnė":"didesnė"}. Reikšmė skaičiuojama už keturis ketvirčius, kurie baigiasi nurodytu ketvirčiu.${i.unit?` Vienetas – ${esc(i.unit)}.`:""}</div></div><span class="badge ${s.c}">${s.t}</span></div>
     <div class="big">${fv(i,cur)}<small>${cur!=null?esc(D.quarters[li]):""}</small></div>${lineChart(i)}
     <div class="stats">${st("2027 m. tikslas",fv(i,i.t27))}${st("2028 m. tikslas",fv(i,i.t28))}${st("2029 m. tikslas",fv(i,i.t29))}${st("Tikslinė grupė",fmt(i.tg))}<div class="sep"></div>${st("Galima suma",eur(i.galima))}${st("Mokėtina suma",eur(i.mokama),i.tg>0?(i.mokama>0?"ok":"bad"):"")}</div>`;
 }
