@@ -61,8 +61,6 @@ document.addEventListener("mousemove",e=>{
   tipEl.style.left=Math.max(8,x)+"px";tipEl.style.top=Math.max(8,y)+"px";
 });
 $("period").textContent=D.period;
-// atidaro naršyklės spausdinimo langą; jame galima pasirinkti „Įrašyti kaip PDF“ (išdėstymas – app.css @media print)
-$("pdf").onclick=()=>window.print();
 const galima=D.indicators.reduce((s,i)=>s+i.galima,0);
 const mokama=D.indicators.reduce((s,i)=>s+i.mokama,0);
 const reached=D.indicators.filter(i=>i.mokama>0).length;
@@ -125,13 +123,11 @@ function lineChart(i){
   ${D.quarters.map((q,k)=>`<text x="${x(k)}" y="${H-8}" font-size="12" text-anchor="middle" fill="#8A87A8">${esc(q)}</text>`).join("")}</svg>`;
 }
 function indHTML(i){
-  const st=(l,v,c)=>`<div class="stat"><span>${l}</span><b class="${c||""}">${v}</b></div>`;
   // jei rodiklis neturi nė vienos reikšmės, rodoma „–“ (anksčiau paieška čia nesibaigdavo ir puslapis užstrigdavo)
   // be tikslinės grupės rodiklis nevertinamas, todėl vietoj reikšmės (0) rodoma „–“
   const li=lastIdx(i.vals),cur=li>=0&&i.tg>0?i.vals[li]:null,s=iStatus(i,cur);
-  return `<div class="ph"><div><b>${esc(i.name)}</b><div class="s">Siektina reikšmė – ${i.lower?"mažesnė":"didesnė"}. Reikšmė skaičiuojama už keturis ketvirčius, kurie baigiasi nurodytu ketvirčiu.${i.unit?` Vienetas – ${esc(i.unit)}.`:""}</div></div><span class="badge ${s.c}">${s.t}</span></div>
-    <div class="big">${fv(i,cur)}<small>${cur!=null?esc(D.quarters[li]):""}</small></div>${lineChart(i)}
-    <div class="stats">${st("2027 m. tikslas",fv(i,i.t27))}${st("2028 m. tikslas",fv(i,i.t28))}${st("2029 m. tikslas",fv(i,i.t29))}${st("Tikslinė grupė",fmt(i.tg))}<div class="sep"></div>${st("Galima suma",eur(i.galima))}${st("Mokėtina suma",eur(i.mokama),i.tg>0?(i.mokama>0?"ok":"bad"):"")}</div>`;
+  return `<div class="ph"><b>${esc(i.name)}</b><span class="badge ${s.c}">${s.t}</span></div>
+    <div class="big">${fv(i,cur)}<small>${cur!=null?esc(D.quarters[li]):""}</small></div>${lineChart(i)}`;
 }
 const niceStep=r=>{const e=Math.pow(10,Math.floor(Math.log10(r))),f=r/e;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
 function ticks(max,cnt){if(!(max>0))max=1;const s=niceStep(max/cnt),a=[];for(let v=0;v<=max+s*.999;v+=s)a.push(+v.toFixed(6));return a}
@@ -326,8 +322,6 @@ function apylTaskai(){
   const rankOf=(it,r)=>[...it.rows].sort((p,q)=>it.i.lower?p.val-q.val:q.val-p.val).findIndex(x=>raktas(x)===raktas(r))+1;
 
   sel.onchange=render;
-  const step=d=>{const i=sel.selectedIndex+d;if(i>=0&&i<sel.options.length){sel.selectedIndex=i;render()}};
-  $("aPrev").onclick=()=>step(-1);$("aNext").onclick=()=>step(1);
   // taško grafike paspaudimas – pasirenkama ta apylinkė
   document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-k]");if(!t||!t.closest("#ovDydis,#aZc"))return;
     sel.value=t.dataset.k;render()});
@@ -344,7 +338,6 @@ function apylTaskai(){
   function render(){
     const k=sel.value;
     selSync();
-    $("aPrev").disabled=sel.selectedIndex<=0;$("aNext").disabled=sel.selectedIndex>=sel.options.length-1;
     if(!k){$("aCards").innerHTML="";$("aCards").hidden=true}  // visos įstaigos vaizde KPI kortelių nėra
     else{
       const w=IND.map(x=>({...x,r:x.rows.find(o=>raktas(o)===k)})).filter(x=>x.r),n=w.length,cnt=f=>w.filter(f).length;
