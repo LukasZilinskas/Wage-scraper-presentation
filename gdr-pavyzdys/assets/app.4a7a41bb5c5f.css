@@ -1,8 +1,8 @@
 :root{--violet:#220083;--bad:#B3261E;--ok:#009870;--mut:#8A87A8;--lav:#F0EEF9;--line:#C9C6EC}
 *{box-sizing:border-box}
 body{font-family:Inter,"Segoe UI",Arial,sans-serif;margin:0;background:#fff;color:#1F2937}
-.wrap{max-width:1200px;margin:0 auto;padding:32px 24px 48px}
-header{text-align:center;margin-bottom:28px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px 48px}
+header{text-align:center;margin-bottom:28px;padding-top:32px}
 h1{display:inline-block;margin:0;padding-bottom:10px;border-bottom:3px solid var(--violet);color:var(--violet);font-size:30px;font-weight:700}
 .sub{margin-top:12px;font-size:16px;color:#1F2937}
 .per{font-size:16px;color:var(--mut)}.per::before{content:"·";margin:0 10px;color:var(--line)}
@@ -11,10 +11,8 @@ h1{display:inline-block;margin:0;padding-bottom:10px;border-bottom:3px solid var
 .card .l{font-size:15px;font-weight:700;color:#555}
 .card .v{font-size:28px;font-weight:700;color:var(--violet);margin-top:10px;white-space:nowrap}
 .card.main{background:var(--lav);border-color:#645DC0}
-.card .d{font-size:13px;color:#6B7280;margin-top:6px}
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:380px){.cards{grid-template-columns:1fr}}
-.wrap{padding-top:0}header{padding-top:32px}
 [hidden]{display:none!important}
 .page{display:none}.page.active{display:block}
 .empty{text-align:center;color:var(--mut);padding:48px 0;font-size:15px}
@@ -34,8 +32,7 @@ table.t tr.tot td.g{color:var(--violet)}
 /* rodiklio filtras skirtuko viršuje */
 .filters{max-width:640px;margin:0 auto 16px}
 .filters label,.pick label,.gr .lbl{display:block;font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
-/* apylinkių skirtukas: filtras ir grafiko perjungiklis */
-/* viena eilutė: rodiklis, apylinkė (tik taškiniam grafikui) ir grafiko pasirinkimas; siaurame ekrane – vienas po kitu */
+/* apylinkių skirtukas – viena eilutė: rodiklis, apylinkė (tik taškiniam grafikui) ir grafiko pasirinkimas; siaurame ekrane – vienas po kitu */
 .bar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;margin-bottom:16px}
 .bar .filters,.bar .pick{flex:1 1 220px;max-width:none;margin:0}
 .bar .pick{flex:1.3 1 230px}.bar .fil{flex:0 1 170px}
@@ -91,7 +88,6 @@ table.t .dot.ok{background:var(--ok)}table.t .dot.bad{background:var(--bad)}tabl
 svg.rc{width:100%;height:auto;display:block;margin-top:6px}
 #ovReit .thead{margin:24px 0 6px;align-items:center}
 @media(max-width:700px){#ovReit .tw3{overflow-x:auto}svg.rc{min-width:640px}}
-/* apylinkių grafikas pagal tikslinės grupės dydį */
 .pick{max-width:640px;margin:0 auto}
 /* sąrašas su tekstine paieška (apylinkė, filialas) */
 .cb{position:relative;min-width:0}
@@ -124,7 +120,7 @@ svg.ch .pt{cursor:pointer}
 svg.ch .pt:hover{stroke:#220083;stroke-width:1.5}
 .empty.sm{padding:18px 0 6px;font-size:14px}
 @media(max-width:600px){.ac{padding:14px}.ac .ph{flex-direction:column;align-items:flex-start;gap:8px}.ac .badge{white-space:normal}}
-/* didinimo mygtukas ir padidintas rodiklis */
+/* taškinė diagrama: didinimo mygtukas ir padidintas rodiklis */
 .zb{position:absolute;top:12px;right:12px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--violet);cursor:pointer;padding:0}
 .zb:hover{background:var(--lav)}
 .zb svg{width:16px;height:16px}
@@ -146,7 +142,6 @@ body.noscroll{overflow:hidden}
 /* naudotojams, kurie sistemoje išjungę animacijas */
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
 /* Spausdinimas ir PDF: visi skirtukai iš eilės su pavadinimais, be valdiklių; filtre pasirinktas rodiklis ir grafikas išlieka */
-.page::before{display:none}
 @media print{
 *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 nav,noscript,.filters,.bar,.pick,.zb,.zm,.exall,.tip{display:none!important}

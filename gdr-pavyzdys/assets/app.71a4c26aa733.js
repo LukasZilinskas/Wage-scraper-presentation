@@ -67,11 +67,11 @@ const reached=D.indicators.filter(i=>i.mokama>0).length;
 const vertinami=D.indicators.filter(i=>i.tg>0).length;  // rodikliai be tikslinės grupės nevertinami
 const dotC=i=>i.tg>0?(i.mokama>0?"ok":"bad"):"na";
 $("cards").innerHTML=[
- ["Mokėtina ketvirtinė suma",eur(mokama),"",1],
- ["Galima ketvirtinė suma",eur(galima),""],
- ["Realizuota dalis",galima>0?Math.round(mokama/galima*100)+"%":"–",""],  // be tikslinės grupės galima suma 0 – dalies nėra
- ["Pasiekti rodikliai",reached+" iš "+vertinami,""]
-].map(c=>`<div class="card${c[3]?" main":""}"><div class="l">${c[0]}</div><div class="v">${c[1]}</div>${c[2]?`<div class="d">${c[2]}</div>`:""}</div>`).join("");
+ ["Mokėtina ketvirtinė suma",eur(mokama),1],
+ ["Galima ketvirtinė suma",eur(galima)],
+ ["Realizuota dalis",galima>0?Math.round(mokama/galima*100)+"%":"–"],  // be tikslinės grupės galima suma 0 – dalies nėra
+ ["Pasiekti rodikliai",reached+" iš "+vertinami]
+].map(c=>`<div class="card${c[2]?" main":""}"><div class="l">${c[0]}</div><div class="v">${c[1]}</div></div>`).join("");
 const nf=v=>v==null?"–":Number(v).toLocaleString("lt-LT",{maximumFractionDigits:0});
 $("sums").innerHTML=`<tr><th scope="col">Rodiklis</th><th scope="col">Tikslinė grupė</th><th scope="col">Galima suma, €</th><th scope="col">Mokėtina suma, €</th></tr>`
  +D.indicators.map(i=>`<tr><td><span class="dot ${dotC(i)}"></span>${esc(i.name)}</td><td class="g">${nf(i.tg)}</td><td class="g">${eur(i.galima)}</td><td class="k">${eur(i.mokama)}</td></tr>`).join("")
@@ -220,7 +220,8 @@ $("co").innerHTML=D.indicators.map((i,n)=>`<div class="panel" data-rod="${n}"><d
 // Du grafikai, perjungiami mygtukais: „Taškinė diagrama“ (numatytasis) ir „Apylinkių reitingas“.
 // Apylinkės su tuščia tiksline grupe (0) neturi prasmingos reikšmės – nelyginamos.
 const pasiekta=(v,t,low)=>t!=null&&v!=null&&(low?v<=t:v>=t);
-const raktas=r=>r.a+"|"+(r.pc??"–");  // apylinkė + prisirašymo įstaigos kodas
+const pcOf=r=>r.pc??"–";  // prisirašymo įstaigos (filialo) kodas
+const raktas=r=>r.a+"|"+pcOf(r);  // apylinkė + prisirašymo įstaigos kodas
 // Sąrašas su tekstine paieška. Tikrasis <select> lieka (jame – reikšmė ir parinktys), bet paslepiamas; vietoj jo rodomas
 // teksto laukas ir pagal įvestą tekstą atrinktų parinkčių sąrašas. Grąžina funkciją, kuri lauke parodo dabartinę reikšmę.
 function paieska(sel){
@@ -260,17 +261,18 @@ function paieska(sel){
   sync();
   return sync;
 }
-const pcOf=r=>r.pc??"–";
-const pasiekusiu=(i,rows)=>{const kiek=t=>rows.filter(r=>pasiekta(r.val,r[t],i.lower)).length;return {ok27:kiek("t27"),ok29:kiek("t29")}};
+// apylinkių tikslai – tie patys kaip rodiklio (i.t27, i.t29)
+const pasiekusiu=(i,rows)=>{const kiek=t=>rows.filter(r=>pasiekta(r.val,i[t],i.lower)).length;return {ok27:kiek("t27"),ok29:kiek("t29")}};
 const IND_VISI=D.indicators.map(i=>{
   const li=lastIdx(i.vals),rows=(D.apyl[i.nr]||[]).filter(r=>r.val!=null&&r.tg>0);
   return {i,rows,inst:li>=0&&i.tg>0?i.vals[li]:null,...pasiekusiu(i,rows)};
 });
 // Filialo filtras rodomas tik tada, kai įstaigos apylinkės priklauso keliems prisirašymo įstaigos kodams.
-// Pasirinkus filialą abiejuose grafikuose ir lentelėje lieka tik jo apylinkės; įstaigos reikšmė lieka visos įstaigos.
+// Pasirinkus filialą abiejuose grafikuose lieka tik jo apylinkės; įstaigos reikšmė lieka visos įstaigos.
 const KODAI=[...new Set(Object.values(D.apyl).flat().map(pcOf))].sort((a,b)=>String(a).localeCompare(String(b),"lt",{numeric:true}));
 if(!(KODAI.length>1&&KODAI.includes(fil)))fil="*";
 let IND=IND_VISI;
+const rodytiKoda=()=>KODAI.length>1&&fil==="*";  // pasirinkus filialą kodas visur tas pats – nerodomas
 const poFilialo=[];
 function taikykFiliala(){
   IND=fil==="*"?IND_VISI:IND_VISI.map(it=>{const rows=it.rows.filter(r=>pcOf(r)===fil);return {...it,rows,...pasiekusiu(it.i,rows)}});
@@ -306,16 +308,15 @@ function apylTaskai(){
 
   // apylinkių sąrašas
   const all=new Map();
-  Object.values(D.apyl).forEach(rows=>rows.forEach(r=>{if(!all.has(raktas(r)))all.set(raktas(r),{a:r.a,pc:r.pc??"–"})}));
+  Object.values(D.apyl).forEach(rows=>rows.forEach(r=>{if(!all.has(raktas(r)))all.set(raktas(r),{a:r.a,pc:pcOf(r)})}));
   const list=[...all.entries()].sort((p,q)=>String(p[1].pc).localeCompare(String(q[1].pc),"lt",{numeric:true})||String(p[1].a).localeCompare(String(q[1].a),"lt",{numeric:true}));
-  const pcs=[...new Set(list.map(([,v])=>v.pc))],multiPc=pcs.length>1;
   const sel=$("aSel");
   // sąraše – pasirinkto filialo apylinkės; pasirinkimas išlieka, jei ta apylinkė yra ir naujame sąraše
   const fillSel=()=>{
     const prev=sel.value;
     sel.innerHTML="";
     sel.add(new Option(fil==="*"?"Visos apylinkės (visa įstaiga)":"Visos filialo apylinkės",""));
-    list.filter(([,v])=>fil==="*"||v.pc===fil).forEach(([k,v])=>sel.add(new Option(v.a+(multiPc&&fil==="*"?` (įstaiga ${v.pc})`:""),k)));
+    list.filter(([,v])=>fil==="*"||v.pc===fil).forEach(([k,v])=>sel.add(new Option(v.a+(rodytiKoda()?` (įstaiga ${v.pc})`:""),k)));
     sel.value=[...sel.options].some(o=>o.value===prev)?prev:"";
   };
   fillSel();
@@ -344,8 +345,8 @@ function apylTaskai(){
     else{
       const w=IND.map(x=>({...x,r:x.rows.find(o=>raktas(o)===k)})).filter(x=>x.r),n=w.length,cnt=f=>w.filter(f).length;
       $("aCards").innerHTML=cards([
-        ["Pasiekti 2027 m. tikslai",`${cnt(x=>pasiekta(x.r.val,x.r.t27,x.i.lower))} iš ${n}`,1],
-        ["Pasiekti 2029 m. tikslai",`${cnt(x=>pasiekta(x.r.val,x.r.t29,x.i.lower))} iš ${n}`],
+        ["Pasiekti 2027 m. tikslai",`${cnt(x=>pasiekta(x.r.val,x.i.t27,x.i.lower))} iš ${n}`,1],
+        ["Pasiekti 2029 m. tikslai",`${cnt(x=>pasiekta(x.r.val,x.i.t29,x.i.lower))} iš ${n}`],
         ["Geriau už įstaigos reikšmę",`${cnt(x=>x.inst!=null&&better(x.r.val,x.inst,x.i.lower))} iš ${n}`],
       ]);
       $("aCards").hidden=false;
@@ -366,14 +367,14 @@ function apylTaskai(){
       const s=iStatus(i,inst);
       return `<div class="ac"${big?"":` data-rod="${n}"`}><div class="ph"><b>${esc(i.name)}</b>${badge(s)}</div>${btn}
         <div class="vr"><span class="v">${fv(i,inst)}</span>`+(rows.length?`<span class="m">${apylM(it)}</span>`:"")+`</div>`
-        +(rows.length?chart(i,rows,null,inst,i,big):`<div class="empty sm">Šiam rodikliui apylinkių duomenų nėra.</div>`)+`</div>`;
+        +(rows.length?chart(i,rows,null,inst,big):`<div class="empty sm">Šiam rodikliui apylinkių duomenų nėra.</div>`)+`</div>`;
     }
     if(!r)return `<div class="ac" data-rod="${n}"><div class="ph"><b>${esc(i.name)}</b><span class="badge na">Nėra duomenų</span></div>
       <div class="empty sm">${zero(i)?"Apylinkės tikslinė grupė šiam rodikliui lygi 0, todėl reikšmė nevertinama.":"Šiam rodikliui apylinkės duomenų nėra."} Įstaigos reikšmė: <b>${fv(i,inst)}</b>.</div></div>`;
-    const s=status(r.val,r.t27,r.t29,i.lower);
+    const s=status(r.val,i.t27,i.t29,i.lower);
     return `<div class="ac"${big?"":` data-rod="${n}"`}><div class="ph"><b>${esc(i.name)}</b>${badge(s)}</div>${btn}
-      <div class="vr"><span class="v">${fv(i,r.val)}</span><span class="m">Tikslinė grupė <b>${nf(r.tg)}</b><br>Vieta tarp įstaigos apylinkių <b>${rankOf(it,r)}</b> iš ${rows.length}</span></div>
-      ${chart(i,rows,r,inst,r,big)}</div>`;
+      <div class="vr"><span class="v">${fv(i,r.val)}</span><span class="m">Tikslinė grupė <b>${nf(r.tg)}</b><br>Vieta tarp ${fil==="*"?"įstaigos":"filialo"} apylinkių <b>${rankOf(it,r)}</b> iš ${rows.length}</span></div>
+      ${chart(i,rows,r,inst,big)}</div>`;
   }
 
   function openZoom(n){zoomK=n;zoomFrom=document.activeElement;$("aZm").hidden=false;fillZoom();document.body.classList.add("noscroll");wrapEl.inert=true;if($("aZx"))$("aZx").focus()}
@@ -388,11 +389,11 @@ function apylTaskai(){
   addEventListener("resize",()=>{if(zoomK!=null)fillZoom()});
 
   // Grafikas: Y – rodiklio reikšmė, X – tikslinė grupė; horizontalios linijos – tikslai, įstaigos ir šalies reikšmės,
-  // linija nueina iki savo etiketės dešinėje. r – pasirinkta apylinkė (null – visos įstaigos vaizdas), T – tikslų šaltinis.
-  function chart(i,rows,r,inst,T,big){
+  // linija nueina iki savo etiketės dešinėje. r – pasirinkta apylinkė (null – visos įstaigos vaizdas).
+  function chart(i,rows,r,inst,big){
     big=big&&innerWidth>=760;
     const W=big?zoomW:560,H=big?Math.round(Math.min(zoomW*.52,Math.max(380,innerHeight-230))):440,P=big?{l:64,r:150,t:16,b:54}:{l:58,r:142,t:16,b:54};
-    const L=[[T.t27,"2027 m.","",2,1,"#645DC0","#220083"],[T.t28,"2028 m.","6 5",1.5,0,"#645DC0","#220083"],[T.t29,"2029 m.","6 5",1.5,0,"#645DC0","#220083"],
+    const L=[[i.t27,"2027 m.","",2,1,"#645DC0","#220083"],[i.t28,"2028 m.","6 5",1.5,0,"#645DC0","#220083"],[i.t29,"2029 m.","6 5",1.5,0,"#645DC0","#220083"],
              [i.country,"Šalis","2 4",1.5,0,"#8A87A8","#6B6890"],[inst,"Įstaiga","2 4",r?1.5:2,r?0:1,"#220083","#220083"]].filter(x=>x[0]!=null);
     const vs=rows.map(x=>x.val).sort((a,b)=>a-b),q90=vs[Math.floor((vs.length-1)*.9)];
     const need=Math.max(r?r.val:0,...L.map(x=>x[0]));
@@ -400,7 +401,7 @@ function apylTaskai(){
     const xt=ticks(Math.max(...rows.map(o=>o.tg))*1.05,big?8:4),xm=xt[xt.length-1];
     const x=v=>P.l+Math.min(v,xm)/xm*(W-P.l-P.r),y=v=>H-P.b-Math.min(v,ym)/ym*(H-P.t-P.b),R=W-P.r,top=P.t,bot=H-P.b;
     let zone="";
-    if(T.t27!=null){const yt27=y(T.t27),zy=i.lower?yt27:top,zh=i.lower?bot-yt27:yt27-top;
+    if(i.t27!=null){const yt27=y(i.t27),zy=i.lower?yt27:top,zh=i.lower?bot-yt27:yt27-top;
       zone=`<rect x="${P.l}" y="${zy}" width="${R-P.l}" height="${Math.max(0,zh)}" fill="#009870" fill-opacity=".05"/>`}
     // „0“ ašių susikirtime nerašomas
     const grid=xt.map(v=>`<line x1="${x(v)}" x2="${x(v)}" y1="${top}" y2="${bot}" stroke="#E6E4F5"/>`+(v?`<text x="${x(v)}" y="${bot+20}" font-size="14" text-anchor="middle" fill="#220083">${nf(v)}</text>`:"")).join("")
@@ -413,14 +414,14 @@ function apylTaskai(){
       return `<line x1="${P.l}" x2="${R}" y1="${ry[k]}" y2="${ry[k]}" ${st}/><polyline points="${R},${ry[k]} ${R+8},${ly[k]} ${R+24},${ly[k]}" fill="none" ${st}/>`
         +`<text x="${R+30}" y="${ly[k]+4}" font-size="14" fill="${f[6]}" ${f[4]?'font-weight="700"':""}>${f[1]}: ${fv(i,f[0])}</text>`}).join("");
     // apylinkių taškai spalvinami pagal pasiektą tikslą; spustelėjus pasirenkama apylinkė
-    const others=rows.filter(o=>!r||raktas(o)!==raktas(r)).map(o=>{const oc=ST_C[status(o.val,o.t27,o.t29,i.lower).c]||ST_C.bad;
+    const others=rows.filter(o=>!r||raktas(o)!==raktas(r)).map(o=>{const oc=ST_C[status(o.val,i.t27,i.t29,i.lower).c]||ST_C.bad;
       const t=tp(`${esc(o.a)} apylinkė`,[["Rodiklio reikšmė",fv(i,o.val)],["Tikslinė grupė",nf(o.tg)],["","Spustelėkite – rodyti šią apylinkę"]],oc);
       const dk=`data-k="${esc(raktas(o))}" class="pt"`;
       if(o.val>ym){const tx=x(o.tg),ty=top+2;return `<path d="M${tx-6},${ty+10}L${tx+6},${ty+10}L${tx},${ty}Z" fill="${oc}" ${dk} ${t}/>`}
       return `<circle cx="${x(o.tg)}" cy="${y(o.val)}" r="${big?7:6}" fill="${oc}" stroke="#fff" stroke-width="1" ${dk} ${t}/>`}).join("");
     let me="";
     if(r){const sx=x(r.tg),sy=y(r.val),lt=fv(i,r.val),lw=textW(lt,"700 16px"),right=sx+20+lw<R;
-      me=`<circle cx="${sx}" cy="${sy}" r="14" fill="none" stroke="#220083" stroke-width="2"/><circle cx="${sx}" cy="${sy}" r="9" fill="${ST_C[status(r.val,r.t27,r.t29,i.lower).c]||ST_C.bad}" stroke="#fff" stroke-width="2.5" ${tp(`${esc(r.a)} apylinkė`,[["Rodiklio reikšmė",fv(i,r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
+      me=`<circle cx="${sx}" cy="${sy}" r="14" fill="none" stroke="#220083" stroke-width="2"/><circle cx="${sx}" cy="${sy}" r="9" fill="${ST_C[status(r.val,i.t27,i.t29,i.lower).c]||ST_C.bad}" stroke="#fff" stroke-width="2.5" ${tp(`${esc(r.a)} apylinkė`,[["Rodiklio reikšmė",fv(i,r.val)],["Tikslinė grupė",nf(r.tg)]],"#220083")}/>`
       +`<text x="${right?sx+20:sx-20}" y="${sy-12}" font-size="16" font-weight="700" text-anchor="${right?"start":"end"}" fill="#220083" stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${lt}</text>`}
     const axes=`<line x1="${P.l}" x2="${P.l}" y1="${top}" y2="${bot}" stroke="#220083"/><line x1="${P.l}" x2="${R}" y1="${bot}" y2="${bot}" stroke="#220083"/>`
       +`<text x="${(P.l+R)/2}" y="${H-8}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>`
@@ -432,14 +433,12 @@ function apylTaskai(){
   render();
 }
 
-// Grafikas „Apylinkių reitingas“: kiekvienam rodikliui apylinkės eilutėmis, surikiuotos nuo prasčiausios iki geriausios, su atstumu iki 2027 m. tikslo
-// ir (dalies rodikliams) asmenų skaičiumi, kurio trūksta iki tikslo. Taško dydis – tikslinė grupė.
-// Kai apylinkių daugiau nei ROWS_MAX, rodomos tik TOP apylinkių, labiausiai nutolusių nuo tikslo.
+// Grafikas „Apylinkių reitingas“: kiekvienam rodikliui apylinkės eilutėmis nuo prasčiausios iki geriausios, su atstumu
+// iki 2027 m. tikslo ir kiek asmenų trūksta (dalies rodikliams) arba kiek atvejų per daug (kitiems). Taško dydis – tikslinė grupė.
+// Kai apylinkių daugiau nei ROWS_MAX, iš pradžių rodomos TOP prasčiausių (nepasiekusių tikslo), mygtuku – visos.
 function apylReitingas(){
   const ROWS_MAX=40,TOP=10;
-  const multiPc=new Set(Object.values(D.apyl).flat().map(r=>r.pc??"–")).size>1;
   const gap=(i,v)=>i.lower?v-i.t27:i.t27-v;                      // >0 – nepasiekta
-  // kiek asmenų trūksta iki 2027 m. tikslo (tik dalies rodikliams, kur reikšmė = pasiekusių dalis tikslinėje grupėje)
   // Atstumas iki 2027 m. tikslo žmonėmis ar atvejais. Dalies rodikliams – kiek asmenų trūksta; rodikliams, skaičiuojamiems
   // i.per gyventojų (siektina mažesnė reikšmė), – kiek atvejų per daug: (reikšmė − tikslas) × tikslinė grupė / i.per.
   const need=(i,tg,v)=>{
@@ -451,9 +450,9 @@ function apylReitingas(){
   const needH=i=>i.pct?"Trūksta iki 2027 m. tikslo":"Viršija 2027 m. tikslą";
   const kiek=(i,n)=>`${nf(n)} ${i.pct?"asm.":"atv."}`;
 
-  function rowsChart(i,rows){
-    const W=900,RH=26,T=58,B=30,H=T+rows.length*RH+B,L=multiPc?285:170,R=hasNeed(i)?760:860,X0=L+20;
-    const inst=i.vals[lastIdx(i.vals)];
+  // inst – įstaigos reikšmė (be tikslinės grupės – null, kaip ir kortelėje)
+  function rowsChart(i,rows,inst){
+    const multiPc=rodytiKoda(),W=900,RH=26,T=58,B=30,H=T+rows.length*RH+B,L=multiPc?285:170,R=hasNeed(i)?760:860,X0=L+20;
     const xt=capY(i,ticks(Math.max(...rows.map(r=>r.val),i.t27??0,inst??0)*1.05,5)),xm=xt[xt.length-1];
     const x=v=>X0+Math.min(v,xm)/xm*(R-X0),top=T-8,bot=H-B+4;
     const hd=`font-size="12" fill="#8A87A8"`;
@@ -473,13 +472,13 @@ function apylReitingas(){
     if(i.t27!=null)out+=ref(i.t27,"2027 m. tikslas",12,`stroke="#645DC0" stroke-width="2"`,1,tKaire);
     const maxNeed=Math.max(0,...rows.map(r=>need(i,r.tg,r.val)??0));
     out+=rows.map((r,k)=>{
-      const y=T+k*RH+RH/2,s=status(r.val,r.t27,r.t29,i.lower),c=ST_C[s.c]||ST_C.bad,cx=x(r.val),rad=Math.max(4,Math.min(10,3.5+Math.sqrt(r.tg)/2.2));
+      const y=T+k*RH+RH/2,s=status(r.val,i.t27,i.t29,i.lower),c=ST_C[s.c]||ST_C.bad,cx=x(r.val),rad=Math.max(4,Math.min(10,3.5+Math.sqrt(r.tg)/2.2));
       const n=need(i,r.tg,r.val),lbl=fv(i,r.val),lw=textW(lbl,"13px")+8;
       // reikšmės užrašas – toje taško pusėje, kur nėra brūkšnio iki tikslo; jei netelpa – kitoje
       let left=i.t27!=null&&s.c==="bad"?cx<x(i.t27):false;
       if(left&&cx-rad-lw<X0)left=false;if(!left&&cx+rad+lw>R)left=true;
-      const tip=tp(`${esc(r.a)} apylinkė`,[["Prisirašymo įstaigos kodas",esc(r.pc??"–")],["Rodiklio reikšmė",lbl],["Tikslinė grupė",nf(r.tg)]].concat(n?[[needH(i),kiek(i,n)]]:[]).concat([["",s.t]]),c);
-      return `<text x="0" y="${y+4}" font-size="13" fill="#1F2937">${esc(r.a)} apylinkė${multiPc?`<tspan fill="#8A87A8"> · ${esc(r.pc??"–")}</tspan>`:""}</text>`
+      const tip=tp(`${esc(r.a)} apylinkė`,[["Prisirašymo įstaigos kodas",esc(pcOf(r))],["Rodiklio reikšmė",lbl],["Tikslinė grupė",nf(r.tg)]].concat(n?[[needH(i),kiek(i,n)]]:[]).concat([["",s.t]]),c);
+      return `<text x="0" y="${y+4}" font-size="13" fill="#1F2937">${esc(r.a)} apylinkė${multiPc?`<tspan fill="#8A87A8"> · ${esc(pcOf(r))}</tspan>`:""}</text>`
         +`<text x="${L}" y="${y+4}" font-size="13" text-anchor="end" fill="#8A87A8">${nf(r.tg)}</text>`
         +(s.c==="bad"&&i.t27!=null?`<line x1="${cx}" x2="${x(i.t27)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="2" stroke-opacity=".55"/>`:"")
         +`<circle cx="${cx}" cy="${y}" r="${rad}" fill="${c}" stroke="#fff" stroke-width="1" ${tip}/>`
@@ -499,14 +498,14 @@ function apylReitingas(){
       +(ni?`<br>${i.pct?"Įstaigai iki 2027 m. tikslo trūksta":"Įstaiga 2027 m. tikslą viršija"}: <b>${kiek(i,ni)}</b>`:"")+`</span></div>`;
     // nuo prasčiausios reikšmės iki geriausios (pagal rodiklio kryptį)
     const eile=a=>[...a].sort((p,q)=>i.lower?q.val-p.val:p.val-q.val);
-    if(rows.length<=ROWS_MAX)return `${open}${head}${meta}${rowsChart(i,eile(rows))}</div>`;
+    if(rows.length<=ROWS_MAX)return `${open}${head}${meta}${rowsChart(i,eile(rows),inst)}</div>`;
     // didelė įstaiga: iš pradžių – pirmosios TOP to paties sąrašo eilutės (prasčiausios, tik nepasiekusios tikslo)
     const btn=t=>`<button type="button" class="exall" data-vis="${n}">${t}</button>`;
-    if(visos.has(n))return `${open}${head}${meta}<div class="thead"><h2>Visos apylinkės</h2><span>${rows.length}, nuo prasčiausios iki geriausios reikšmės</span>${btn("Rodyti tik labiausiai nutolusias")}</div>${rowsChart(i,eile(rows))}</div>`;
+    if(visos.has(n))return `${open}${head}${meta}<div class="thead"><h2>Visos apylinkės</h2><span>${rows.length}, nuo prasčiausios iki geriausios reikšmės</span>${btn("Rodyti tik labiausiai nutolusias")}</div>${rowsChart(i,eile(rows),inst)}</div>`;
     const worst=eile(rows.filter(r=>gap(i,r.val)>0)).slice(0,TOP);
     return `${open}${head}${meta}<div class="thead"><h2>${worst.length?"Labiausiai nuo 2027 m. tikslo nutolusios apylinkės":"Visos apylinkės pasiekė 2027 m. tikslą"}</h2>`
       +(worst.length?`<span>${worst.length} prasčiausios iš ${rows.length}</span>`:"")+btn(`Rodyti visas apylinkes (${rows.length})`)+`</div>`
-      +(worst.length?rowsChart(i,worst):"")+`</div>`;
+      +(worst.length?rowsChart(i,worst,inst):"")+`</div>`;
   }
   const piesk=()=>{$("ovReit").innerHTML=`<div class="lg dots">${LEG}</div><div class="stackw">${IND.map(kortele).join("")}</div>`};
   $("ovReit").onclick=e=>{
