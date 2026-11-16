@@ -37,7 +37,7 @@ table.t tr.tot td.g{color:var(--violet)}
 .tw{overflow-x:auto}
 /* rodiklio filtras skirtuko viršuje */
 .filters{max-width:640px;margin:0 auto 16px}
-.filters label,.pick label,.tf label,.gr .lbl{display:block;font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+.filters label,.pick label,.gr .lbl{display:block;font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
 /* apylinkių skirtukas: filtras ir grafiko perjungiklis */
 /* viena eilutė: rodiklis, apylinkė (tik taškiniam grafikui) ir grafiko pasirinkimas; siaurame ekrane – vienas po kitu */
 .bar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;margin-bottom:16px}
@@ -69,10 +69,7 @@ select:focus{outline:2px solid var(--violet)}
 .stat b{display:block;margin-top:4px;font-size:18px;color:#1F2937}
 .stat b.bad{color:var(--bad)}.stat b.ok{color:var(--ok)}
 .sep{width:1px;background:var(--line);align-self:stretch}
-.tw.narrow .thead{padding:0 15px}
-.tw.narrow{max-width:980px;margin:0 auto}
-table.t td.pi{text-align:left;white-space:normal;color:#44464B}table.t th:nth-child(2){text-align:left}
-.tw.narrow td .badge{font-size:12px;padding:4px 10px;display:inline-block}
+table.t th:nth-child(2){text-align:left}
 .lg{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-top:8px;font-size:14px;color:var(--violet)}
 .lg i{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;vertical-align:-2px}
 nav{position:sticky;top:0;z-index:10;display:flex;justify-content:center;margin:0 -24px 14px;padding:10px 24px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px)}
@@ -157,23 +154,6 @@ svg.ch .pt:hover{stroke:#220083;stroke-width:1.5}
 .zc .ac .vr .m{font-size:14px}
 .zc svg.ch{max-height:calc(100vh - 220px)}
 body.noscroll{overflow:hidden}
-/* duomenų lentelė po grafikais */
-.tblw{margin-top:36px}
-.tf{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:0 15px;margin-bottom:14px}
-table.t td.none{text-align:center;color:var(--mut);padding:22px}
-table.t tr.aind td{border-top:1px solid #E6E4F5;padding-top:12px;padding-bottom:12px;vertical-align:top}
-table.t tr.aind.open td{background:#F3F2FB}
-table.t tr.aind small{display:block;font-size:12px;color:var(--mut);margin:3px 0 0 22px;font-weight:400}
-.ex{display:inline-flex;align-items:baseline;gap:10px;border:0;background:none;padding:0;font:700 14px Inter,"Segoe UI",Arial,sans-serif;color:var(--violet);text-align:left;cursor:pointer}
-span.ex{cursor:default;padding-left:22px}
-button.ex:hover{text-decoration:underline}
-.ex .ar{flex:none;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin-right:3px;position:relative;top:-1px}
-tr.open .ex .ar{transform:rotate(45deg);top:-3px}
-table.t tr.asub td{background:#fff;padding-top:7px;padding-bottom:7px}
-table.t tr.asub td:first-child{padding-left:34px}
-table.t tr.asub:hover td{background:#FBFAFE}
-.alink{border:0;background:none;padding:0;font:500 14px Inter,"Segoe UI",Arial,sans-serif;color:var(--violet);cursor:pointer;text-align:left}
-.alink:hover{text-decoration:underline}
 .exall{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--violet);font:600 13px Inter,"Segoe UI",Arial,sans-serif;padding:6px 12px;cursor:pointer}
 .exall:hover{background:var(--lav)}
 @media(max-width:700px){.zm{padding:0}.zc{border-radius:0;height:100%;background:#fff}.zc .ac{box-shadow:none;border-radius:0}}
@@ -183,7 +163,7 @@ table.t tr.asub:hover td{background:#FBFAFE}
 .page::before{display:none}
 @media print{
 *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-nav,noscript,.pdf,.filters,.bar,.pick,.tf,.zb,.zm,.exall,.tip{display:none!important}
+nav,noscript,.pdf,.filters,.bar,.pick,.zb,.zm,.exall,.tip{display:none!important}
 .wrap{max-width:none;padding:0}header{padding-top:0;margin-bottom:20px}
 .page{display:block!important;break-before:page}
 #p-money{break-before:auto}
@@ -191,5 +171,4 @@ nav,noscript,.pdf,.filters,.bar,.pick,.tf,.zb,.zm,.exall,.tip{display:none!impor
 .panel,.ac,.card{box-shadow:none;break-inside:avoid}
 table.t tr{break-inside:avoid}
 .tw,#ovReit .tw3{overflow:visible}svg.rc{min-width:0}
-button.ex,.alink{cursor:default}
 }

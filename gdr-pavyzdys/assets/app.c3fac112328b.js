@@ -206,7 +206,6 @@ function countryChart(i){
 // Bendras skirtukams „Rodikliai“, „Apylinkių palyginimas“ ir „Palyginimas šalyje“: pasirinkimas viename skirtuke galioja ir kituose.
 // Parinktys imamos iš duomenų; numatyta – visi rodikliai. Rodiklio kortelės pažymėtos data-rod (rodiklio eilės numeris).
 const rodSel=[...document.querySelectorAll("select.rod")];
-let poFiltro=()=>{};
 const rodOn=n=>rod==="*"||String(n)===rod;
 function rodRodyk(){
   document.querySelectorAll("[data-rod]").forEach(e=>{e.hidden=!rodOn(e.dataset.rod)});
@@ -216,7 +215,7 @@ rodSel.forEach(s=>{
   s.add(new Option("Visi rodikliai","*"));
   D.indicators.forEach((i,k)=>s.add(new Option(i.name,k)));
   s.value=rod;
-  s.onchange=()=>{rod=s.value;rodSel.forEach(o=>{o.value=rod});rodRodyk();poFiltro();adresas()};
+  s.onchange=()=>{rod=s.value;rodSel.forEach(o=>{o.value=rod});rodRodyk();adresas()};
 });
 $("ind").innerHTML=D.indicators.map((i,n)=>`<div class="panel" data-rod="${n}">${indHTML(i)}</div>`).join("");
 $("co").innerHTML=D.indicators.map((i,n)=>`<div class="panel" data-rod="${n}"><div class="ph"><b>${esc(i.name)}</b></div>${countryChart(i)}</div>`).join("");
@@ -302,12 +301,10 @@ if(Object.keys(D.apyl).length){apylTaskai();apylReitingas();rodykGrafika(graf)}
 else{graf=GRAF[0];$("ovBar").hidden=true;$("ovDydis").innerHTML=`<div class="empty">Šiai įstaigai apylinkių duomenų nėra.</div>`}
 rodRodyk();adresas();
 
-// Grafikas „Taškinė diagrama“: visi rodikliai vienoje vietoje (visa įstaiga arba pasirinkta apylinkė) ir duomenų lentelė.
+// Grafikas „Taškinė diagrama“: visi rodikliai vienoje vietoje (visa įstaiga arba pasirinkta apylinkė).
 function apylTaskai(){
   const better=(a,b,low)=>low?a<b:a>b;
   const badge=s=>`<span class="badge ${s.c}">${s.t}</span>`;
-  const plural=(n,a,b,c)=>`${n} ${n%10===1&&n%100!==11?a:(n%10>=2&&n%10<=9&&!(n%100>=12&&n%100<=19))?b:c}`;
-  const instQ=(()=>{for(const i of D.indicators){const k=lastIdx(i.vals);if(k>=0)return esc(D.quarters[k])}return""})();
 
   // apylinkių sąrašas
   const all=new Map();
@@ -328,18 +325,12 @@ function apylTaskai(){
 
   const rankOf=(it,r)=>[...it.rows].sort((p,q)=>it.i.lower?p.val-q.val:q.val-p.val).findIndex(x=>raktas(x)===raktas(r))+1;
 
-  // lentelės filtrai; įjungus filtrą išskleidžiama viskas, kad atrinktos eilutės būtų matomos
-  [["top","Pasiektas 2029 m. tikslas"],["ok","Pasiektas 2027 m. tikslas"],["bad","Nepasiektas 2027 m. tikslas"]].forEach(([v,t])=>$("aFS").add(new Option(t,v)));
-  const opened=new Set(),F=["aFS"];
-  F.forEach(id=>$(id).onchange=()=>{if(F.some(f=>$(f).value!=="*"))IND.forEach((x,n)=>opened.add(n));else opened.clear();renderTable()});
-
   sel.onchange=render;
   const step=d=>{const i=sel.selectedIndex+d;if(i>=0&&i<sel.options.length){sel.selectedIndex=i;render()}};
   $("aPrev").onclick=()=>step(-1);$("aNext").onclick=()=>step(1);
-  // taško grafike ar apylinkės lentelėje paspaudimas – pasirenkama ta apylinkė
+  // taško grafike paspaudimas – pasirenkama ta apylinkė
   document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-k]");if(!t||!t.closest("#ovDydis,#aZc"))return;
-    sel.value=t.dataset.k;render();
-    if(t.closest("#aTt"))$("aPick").scrollIntoView({behavior:"smooth"})});
+    sel.value=t.dataset.k;render()});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&zoomK!=null)closeZoom()});
 
   const ZOOM_IN=`<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 3h5v5M8 17H3v-5M17 3l-6 6M3 17l6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -369,7 +360,6 @@ function apylTaskai(){
     $("aOut").querySelectorAll(".zb").forEach(b=>b.onclick=()=>openZoom(+b.dataset.n));
     rodRodyk();
     if(zoomK!=null)fillZoom();
-    renderTable();
   }
 
   const zero=i=>(D.apyl[i.nr]||[]).some(x=>raktas(x)===sel.value&&!(x.tg>0));
@@ -443,47 +433,7 @@ function apylTaskai(){
     return `<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(i.name)}: apylinkių reikšmės pagal tikslinę grupę">${zone}${grid}${axes}${lines}${others}${me}</svg>`;
   }
 
-  // Duomenų lentelė: visos įstaigos vaizde – rodiklių eilutės (visa įstaiga), išskleidžiamos iki apylinkių;
-  // pasirinkus apylinkę – tik tos apylinkės eilutės (po vieną kiekvienam rodikliui)
-  function renderTable(){
-    const k=sel.value,fs=$("aFS").value;
-    const pass=(v,t27,t29,low)=>fs==="*"||status(v,t27,t29,low).c===fs;
-    const its=IND.map((it,n)=>({...it,n})).filter(it=>rodOn(it.n));
-    let body="",cnt=0;
-    if(!k){
-      $("aTh").textContent="Rodiklių duomenys";
-      const pcCol=multiPc,ex0=[];
-      body=`<tr><th scope="col">Rodiklis / apylinkė</th>${pcCol?`<th scope="col">Prisirašymo įstaigos kodas</th>`:""}<th scope="col">Tikslinė grupė</th><th scope="col">Rodiklio reikšmė</th><th scope="col">Būsena</th></tr>`;
-      let shown=0;
-      its.forEach(({i,rows,inst,n})=>{
-        const rs=rows.filter(r=>pass(r.val,r.t27,r.t29,i.lower)).sort((p,q)=>i.lower?p.val-q.val:q.val-p.val);
-        if((fs!=="*"||fil!=="*")&&!rs.length)return;
-        shown++;cnt+=rs.length;
-        const ex=rs.length>0&&opened.has(n);
-        if(rs.length)ex0.push(n);
-        const nm=rs.length?`<button type="button" class="ex" data-x="${n}" aria-expanded="${ex}"><span class="ar"></span>${esc(i.name)}</button>`:`<span class="ex">${esc(i.name)}</span>`;
-        body+=`<tr class="aind${ex?" open":""}"><td>${nm}<small>Visa įstaiga · ${instQ} · ${rs.length?plural(rs.length,"apylinkė","apylinkės","apylinkių"):"apylinkių duomenų nėra"}</small></td>${pcCol?`<td class="pi">–</td>`:""}<td class="g">${nf(i.tg)}</td><td class="k">${fv(i,inst)}</td><td>${badge(iStatus(i,inst))}</td></tr>`;
-        if(ex)body+=rs.map(r=>`<tr class="asub"><td><button type="button" class="alink" data-k="${esc(raktas(r))}">${esc(r.a)} apylinkė</button></td>${pcCol?`<td class="pi">${esc(r.pc??"–")}</td>`:""}<td class="g">${nf(r.tg)}</td><td class="k">${fv(i,r.val)}</td><td>${badge(status(r.val,r.t27,r.t29,i.lower))}</td></tr>`).join("");
-      });
-      if(!shown)body="";
-      const allOpen=ex0.length&&ex0.every(n=>opened.has(n));
-      $("aTc").innerHTML=ex0.length?`<button type="button" class="exall" id="aExall">${allOpen?"Suskleisti visus":"Išskleisti visus"}</button>`:"";
-      if($("aExall"))$("aExall").onclick=()=>{ex0.forEach(n=>allOpen?opened.delete(n):opened.add(n));renderTable()};
-      $("aTt").innerHTML=body||`<tr><td class="none">Pagal pasirinktus filtrus duomenų nėra.</td></tr>`;
-      $("aTt").querySelectorAll("button.ex").forEach(b=>b.onclick=()=>{const n=+b.dataset.x;opened.has(n)?opened.delete(n):opened.add(n);renderTable();const f=$("aTt").querySelector(`button.ex[data-x="${n}"]`);if(f)f.focus()});
-      return;
-    }
-    $("aTh").textContent=sel.options[sel.selectedIndex].text+" – apylinkės duomenys";
-    const rs=its.map(it=>({...it,r:it.rows.find(o=>raktas(o)===k)})).filter(x=>x.r&&pass(x.r.val,x.r.t27,x.r.t29,x.i.lower));
-    cnt=rs.length;
-    if(cnt)body=`<tr><th scope="col">Rodiklis</th><th scope="col">Tikslinė grupė</th><th scope="col">Apylinkės reikšmė</th><th scope="col">Įstaigos reikšmė</th><th scope="col">Šalies reikšmė</th><th scope="col">Vieta</th><th scope="col">Būsena</th></tr>`
-      +rs.map(x=>`<tr><td>${esc(x.i.name)}</td><td class="g">${nf(x.r.tg)}</td><td class="k">${fv(x.i,x.r.val)}</td><td>${fv(x.i,x.inst)}</td><td>${fv(x.i,x.i.country)}</td><td class="g">${rankOf(x,x.r)} iš ${x.rows.length}</td><td>${badge(status(x.r.val,x.r.t27,x.r.t29,x.i.lower))}</td></tr>`).join("");
-    $("aTc").textContent=cnt?plural(cnt,"eilutė","eilutės","eilučių"):"";
-    $("aTt").innerHTML=body||`<tr><td class="none">Pagal pasirinktus filtrus duomenų nėra.</td></tr>`;
-  }
-
   poFilialo.push(()=>{fillSel();render()});
-  poFiltro=renderTable;  // lentelėje – tik filtre pasirinktas rodiklis
   render();
 }
 
