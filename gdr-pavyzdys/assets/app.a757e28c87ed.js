@@ -284,7 +284,9 @@ if(KODAI.length>1){
   fs.onchange=()=>{fil=fs.value;taikykFiliala();poFilialo.forEach(f=>f());adresas()};
   taikykFiliala();
 }
-const apylM=it=>`Apylinkių, pasiekusių 2027 m. tikslą: <b>${it.ok27}</b> iš ${it.rows.length}<br>Apylinkių, pasiekusių 2029 m. tikslą: <b>${it.ok29}</b> iš ${it.rows.length}`;
+// „X iš N (P %)“ – procentai sveiki, kad būtų lengva palyginti rodiklius ir filialus
+const dalis=(k,n)=>`<b>${k}</b> iš ${n} (${n?Math.round(k/n*100):0} %)`;
+const apylM=it=>`Apylinkių, pasiekusių 2027 m. tikslą: ${dalis(it.ok27,it.rows.length)}<br>Apylinkių, pasiekusių 2029 m. tikslą: ${dalis(it.ok29,it.rows.length)}`;
 const LEG=`<span><i class="c-top"></i>Pasiektas 2029 m. tikslas</span><span><i class="c-ok"></i>Pasiektas 2027 m. tikslas</span><span><i class="c-bad"></i>Nepasiektas 2027 m. tikslas</span>`;
 const swB=[...document.querySelectorAll("#ovSw button")];
 function rodykGrafika(g){
@@ -430,7 +432,7 @@ function apylTaskai(){
   render();
 }
 
-// Grafikas „Apylinkių reitingas“: kiekvienam rodikliui apylinkės eilutėmis, surikiuotos nuo geriausios, su atstumu iki 2027 m. tikslo
+// Grafikas „Apylinkių reitingas“: kiekvienam rodikliui apylinkės eilutėmis, surikiuotos nuo prasčiausios iki geriausios, su atstumu iki 2027 m. tikslo
 // ir (dalies rodikliams) asmenų skaičiumi, kurio trūksta iki tikslo. Taško dydis – tikslinė grupė.
 // Kai apylinkių daugiau nei ROWS_MAX, rodomos tik TOP apylinkių, labiausiai nutolusių nuo tikslo.
 function apylReitingas(){
@@ -495,15 +497,16 @@ function apylReitingas(){
     const ni=i.tg>0?need(i,i.tg,inst):null;
     const meta=`<div class="vr"><span class="v">${fv(i,inst)}</span><span class="m">${apylM(it)}`
       +(ni?`<br>${i.pct?"Įstaigai iki 2027 m. tikslo trūksta":"Įstaiga 2027 m. tikslą viršija"}: <b>${kiek(i,ni)}</b>`:"")+`</span></div>`;
-    const best=()=>[...rows].sort((p,q)=>i.lower?p.val-q.val:q.val-p.val);
-    if(rows.length<=ROWS_MAX)return `${open}${head}${meta}${rowsChart(i,best())}</div>`;
+    // nuo prasčiausios reikšmės iki geriausios (pagal rodiklio kryptį)
+    const eile=a=>[...a].sort((p,q)=>i.lower?q.val-p.val:p.val-q.val);
+    if(rows.length<=ROWS_MAX)return `${open}${head}${meta}${rowsChart(i,eile(rows))}</div>`;
     // didelė įstaiga: iš pradžių tik apylinkės, kurių atstumas iki tikslo, padaugintas iš tikslinės grupės, didžiausias
     const btn=t=>`<button type="button" class="exall" data-vis="${n}">${t}</button>`;
-    if(visos.has(n))return `${open}${head}${meta}<div class="thead"><h2>Visos apylinkės</h2><span>${rows.length}, nuo geriausios reikšmės</span>${btn("Rodyti tik labiausiai nutolusias")}</div>${rowsChart(i,best())}</div>`;
+    if(visos.has(n))return `${open}${head}${meta}<div class="thead"><h2>Visos apylinkės</h2><span>${rows.length}, nuo prasčiausios iki geriausios reikšmės</span>${btn("Rodyti tik labiausiai nutolusias")}</div>${rowsChart(i,eile(rows))}</div>`;
     const worst=rows.filter(r=>gap(i,r.val)>0).sort((p,q)=>gap(i,q.val)*q.tg-gap(i,p.val)*p.tg).slice(0,TOP);
     return `${open}${head}${meta}<div class="thead"><h2>${worst.length?"Labiausiai nuo 2027 m. tikslo nutolusios apylinkės":"Visos apylinkės pasiekė 2027 m. tikslą"}</h2>`
       +(worst.length?`<span>${worst.length} iš ${rows.length}, atsižvelgiant į tikslinę grupę</span>`:"")+btn(`Rodyti visas apylinkes (${rows.length})`)+`</div>`
-      +(worst.length?rowsChart(i,worst):"")+`</div>`;
+      +(worst.length?rowsChart(i,eile(worst)):"")+`</div>`;
   }
   const piesk=()=>{$("ovReit").innerHTML=`<div class="lg dots">${LEG}</div><div class="stackw">${IND.map(kortele).join("")}</div>`};
   $("ovReit").onclick=e=>{
