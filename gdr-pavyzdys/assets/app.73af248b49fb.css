@@ -5,10 +5,9 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif;margin:0;background:#fff;colo
 header{text-align:center;margin-bottom:28px}
 h1{display:inline-block;margin:0;padding-bottom:10px;border-bottom:3px solid var(--violet);color:var(--violet);font-size:30px;font-weight:700}
 .sub{margin-top:12px;font-size:16px;color:#1F2937}
-.pdf{display:inline-flex;align-items:center;gap:6px;margin-left:14px;padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--violet);font:600 13px Inter,"Segoe UI",Arial,sans-serif;cursor:pointer;vertical-align:1px}
+.pdf{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:10px;padding:0;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--violet);cursor:pointer;vertical-align:-6px}
 .pdf:hover{background:var(--lav)}.pdf:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
-.pdf svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-@media(max-width:480px){.pdf{margin:10px 0 0}}
+.pdf svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .per{font-size:16px;color:var(--mut)}.per::before{content:"·";margin:0 10px;color:var(--line)}
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;text-align:center}
