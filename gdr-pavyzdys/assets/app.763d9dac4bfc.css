@@ -106,7 +106,17 @@ svg.rc{width:100%;height:auto;display:block;margin-top:6px}
 /* apylinkių grafikas pagal tikslinės grupės dydį */
 .pick{max-width:640px;margin:0 auto;scroll-margin-top:90px}
 .pick .row{display:flex;gap:8px;align-items:center;margin-top:6px}
-.pick select{margin-top:0}
+/* sąrašas su tekstine paieška (apylinkė, filialas) */
+.cb{position:relative;min-width:0}.pick .cb{flex:1}
+.cb input{width:100%;margin-top:6px;padding:12px 32px 12px 12px;border:1px solid var(--line);border-radius:10px;font:15px Inter,"Segoe UI",Arial,sans-serif;color:#1F2937;background:#fff;text-overflow:ellipsis}
+.pick .cb input{margin-top:0}
+.cb input:focus{outline:2px solid var(--violet)}
+.cb::after{content:"";position:absolute;right:13px;bottom:17px;border:5px solid transparent;border-top-color:#4B4870;border-bottom:0;pointer-events:none}
+.cb ul{position:absolute;z-index:20;left:0;right:0;top:100%;min-width:180px;max-height:320px;overflow:auto;margin:4px 0 0;padding:4px;list-style:none;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(34,0,131,.18);font-size:14px;text-align:left}
+.cb li{padding:8px 10px;border-radius:7px;cursor:pointer}
+.cb li:hover,.cb li.act{background:var(--lav)}
+.cb li[aria-selected]{font-weight:700;color:var(--violet)}
+.cb li.none{color:var(--mut);cursor:default;background:none}
 .pick button{flex:none;width:44px;height:44px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--violet);font:700 18px Inter,"Segoe UI",Arial,sans-serif;cursor:pointer}
 .pick button:hover:not(:disabled){background:var(--lav)}
 .pick button:disabled{opacity:.35;cursor:default}

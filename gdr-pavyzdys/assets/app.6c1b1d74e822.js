@@ -228,6 +228,45 @@ $("co").innerHTML=D.indicators.map((i,n)=>`<div class="panel" data-rod="${n}"><d
 // Apylinkės su tuščia tiksline grupe (0) neturi prasmingos reikšmės – nelyginamos.
 const pasiekta=(v,t,low)=>t!=null&&v!=null&&(low?v<=t:v>=t);
 const raktas=r=>r.a+"|"+(r.pc??"–");  // apylinkė + prisirašymo įstaigos kodas
+// Sąrašas su tekstine paieška. Tikrasis <select> lieka (jame – reikšmė ir parinktys), bet paslepiamas; vietoj jo rodomas
+// teksto laukas ir pagal įvestą tekstą atrinktų parinkčių sąrašas. Grąžina funkciją, kuri lauke parodo dabartinę reikšmę.
+function paieska(sel){
+  const w=document.createElement("div"),inp=document.createElement("input"),ul=document.createElement("ul");
+  w.className="cb";ul.id=sel.id+"L";ul.hidden=true;ul.setAttribute("role","listbox");
+  inp.id=sel.id+"T";inp.type="text";inp.autocomplete="off";inp.spellcheck=false;
+  inp.setAttribute("role","combobox");inp.setAttribute("aria-autocomplete","list");inp.setAttribute("aria-controls",ul.id);inp.setAttribute("aria-expanded","false");
+  const lab=document.querySelector(`label[for="${sel.id}"]`);if(lab)lab.htmlFor=inp.id;
+  sel.hidden=true;sel.after(w);w.append(inp,ul);
+  let act=-1;
+  const sync=()=>{inp.value=sel.selectedIndex>=0?sel.options[sel.selectedIndex].text:""};
+  const close=()=>{ul.hidden=true;inp.setAttribute("aria-expanded","false");inp.removeAttribute("aria-activedescendant");sync()};
+  const pick=v=>{sel.value=v;close();sel.onchange()};
+  const li=()=>[...ul.querySelectorAll("li[data-v]")];
+  const mark=k=>{const a=li();act=a.length?(k+a.length)%a.length:-1;
+    a.forEach((e,n)=>e.classList.toggle("act",n===act));
+    if(act>=0){a[act].scrollIntoView({block:"nearest"});inp.setAttribute("aria-activedescendant",a[act].id)}};
+  // visos=true – visas sąrašas (atidarius); kitaip – tik parinktys, kuriose yra įvestas tekstas
+  const open=visos=>{
+    const q=visos?"":inp.value.trim().toLowerCase(),rasta=[...sel.options].filter(o=>!q||o.text.toLowerCase().includes(q));
+    ul.innerHTML=rasta.length?rasta.map((o,k)=>`<li role="option" id="${ul.id}${k}" data-v="${esc(o.value)}"${o.value===sel.value?' aria-selected="true"':""}>${esc(o.text)}</li>`).join("")
+      :`<li class="none">Nieko nerasta</li>`;
+    ul.hidden=false;inp.setAttribute("aria-expanded","true");act=-1;
+    if(q&&rasta.length)mark(0);
+  };
+  inp.onfocus=()=>{inp.select();open(true)};
+  inp.onclick=()=>{if(ul.hidden)open(true)};
+  inp.oninput=()=>open(false);
+  inp.onblur=close;
+  inp.onkeydown=e=>{
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();if(ul.hidden)open(true);mark(act+(e.key==="ArrowDown"?1:act<0?0:-1))}
+    else if(e.key==="Enter"){const a=li();if(!ul.hidden&&a[act])pick(a[act].dataset.v)}
+    else if(e.key==="Escape"&&!ul.hidden){e.stopPropagation();close()}
+  };
+  // mousedown, ne click – kad laukas neprarastų fokuso anksčiau, nei parinktis pasirenkama
+  ul.onmousedown=e=>{e.preventDefault();const t=e.target.closest("li[data-v]");if(t)pick(t.dataset.v)};
+  sync();
+  return sync;
+}
 const pcOf=r=>r.pc??"–";
 const pasiekusiu=(i,rows)=>{const kiek=t=>rows.filter(r=>pasiekta(r.val,r[t],i.lower)).length;return {ok27:kiek("t27"),ok29:kiek("t29")}};
 const IND_VISI=D.indicators.map(i=>{
@@ -248,6 +287,7 @@ if(KODAI.length>1){
   fs.add(new Option("Visi filialai","*"));
   KODAI.forEach(c=>fs.add(new Option(c==="–"?"Nenurodytas":c,c)));
   fs.value=fil;fs.parentElement.hidden=false;
+  paieska(fs);
   fs.onchange=()=>{fil=fs.value;taikykFiliala();poFilialo.forEach(f=>f());adresas()};
   taikykFiliala();
 }
@@ -286,6 +326,7 @@ function apylTaskai(){
     sel.value=[...sel.options].some(o=>o.value===prev)?prev:"";
   };
   fillSel();
+  const selSync=paieska(sel);  // lauke rodoma pasirinkta apylinkė – atnaujinama kiekvieną kartą perpiešiant
 
   const rankOf=(it,r)=>[...it.rows].sort((p,q)=>it.i.lower?p.val-q.val:q.val-p.val).findIndex(x=>raktas(x)===raktas(r))+1;
 
@@ -313,6 +354,7 @@ function apylTaskai(){
 
   function render(){
     const k=sel.value;
+    selSync();
     $("aPrev").disabled=sel.selectedIndex<=0;$("aNext").disabled=sel.selectedIndex>=sel.options.length-1;
     if(!k){$("aCards").innerHTML="";$("aCards").hidden=true}  // visos įstaigos vaizde KPI kortelių nėra
     else{
