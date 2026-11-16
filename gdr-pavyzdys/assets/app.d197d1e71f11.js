@@ -257,7 +257,7 @@ function apylTaskai(){
   const pcs=[...new Set(list.map(([,v])=>v.pc))],multiPc=pcs.length>1;
   const sel=$("aSel");
   sel.add(new Option("Visos apylinkės (visa įstaiga)",""));
-  list.forEach(([k,v])=>sel.add(new Option(`Apylinkė ${v.a}`+(multiPc?` · kodas ${v.pc}`:""),k)));
+  list.forEach(([k,v])=>sel.add(new Option(v.a+(multiPc?` · kodas ${v.pc}`:""),k)));
 
   const rankOf=(it,r)=>[...it.rows].sort((p,q)=>it.i.lower?p.val-q.val:q.val-p.val).findIndex(x=>raktas(x)===raktas(r))+1;
 
@@ -408,7 +408,7 @@ function apylTaskai(){
       $("aTt").querySelectorAll("button.ex").forEach(b=>b.onclick=()=>{const n=+b.dataset.x;opened.has(n)?opened.delete(n):opened.add(n);renderTable();const f=$("aTt").querySelector(`button.ex[data-x="${n}"]`);if(f)f.focus()});
       return;
     }
-    $("aTh").textContent=sel.options[sel.selectedIndex].text+" – duomenys";
+    $("aTh").textContent="Apylinkė "+sel.options[sel.selectedIndex].text+" – duomenys";
     const rs=its.map(it=>({...it,r:it.rows.find(o=>raktas(o)===k)})).filter(x=>x.r&&pass(x.r.val,x.r.t27,x.r.t29,x.i.lower));
     cnt=rs.length;
     if(cnt)body=`<tr><th scope="col">Rodiklis</th><th scope="col">Tikslinė grupė</th><th scope="col">Apylinkės reikšmė</th><th scope="col">Įstaigos reikšmė</th><th scope="col">Šalies reikšmė</th><th scope="col">Vieta</th><th scope="col">Būsena</th></tr>`
