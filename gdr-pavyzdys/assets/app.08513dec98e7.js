@@ -253,12 +253,11 @@ function santrauka(){
     <span><i class="s3"></i>Visi 2029 m. tikslai (120 %) <b>${eur0(G29)}</b></span><span class="r">Iki didžiausios sumos trūksta: <b>${eur0(G29-M)}</b></span></div>`:"";
   $("apz").innerHTML=`<p>${lead}</p>${bar}`;
 
-  // kortelės: gauta dalis – nuo abiejų sumų
-  const dv=(v,l)=>`<div class="dv"><b>${v}</b><span>${l}</span></div>`;
-  $("cards").innerHTML=`<div class="card main"><div class="l">Mokėtina ketvirtinė suma</div><div class="v">${eur(M)}</div></div>`
-    +`<div class="card"><div class="l">Galima ketvirtinė suma</div>${dv(eur(G27),"pasiekus visus 2027 m. tikslus")}${dv(eur(G29),"pasiekus visus 2029 m. tikslus (120 %)")}</div>`
-    +`<div class="card"><div class="l">Gauta galimos sumos dalis</div>${dv(proc(M,G27),"2027 m. tikslų sumos")}${dv(proc(M,G29),"didžiausios sumos (2029 m.)")}</div>`
-    +`<div class="card"><div class="l">Pasiekti rodikliai</div><div class="v">${pasiekti} iš ${vertinami}</div></div>`;
+  // keturi skaičiai skydelio dešinėje; galima suma ir gauta dalis – nuo abiejų sumų (2027 m. ir didžiausios, 2029 m.)
+  const kpi=(l,v,p,main)=>`<div${main?' class="main"':""}><span>${l}</span><b>${v}</b>${p?`<em>${p}</em>`:""}</div>`;
+  $("cards").innerHTML=kpi("Mokėtina suma",eur(M),"per ketvirtį",1)+kpi("Pasiekti rodikliai",`${pasiekti} iš ${vertinami}`,"2027 arba 2029 m. tikslas")
+    +kpi("Galima suma",eur(G27),`2027 m.; 2029 m. – ${eur0(G29)}`)
+    +kpi("Gauta dalis",`${proc(M,G27)} <i>/ ${proc(M,G29)}</i>`,"nuo 2027 m. / didžiausios sumos");
 
   // rodiklių lentelė
   const q=D.quarters.filter((x,n)=>D.indicators.some(i=>i.vals[n]!=null));
