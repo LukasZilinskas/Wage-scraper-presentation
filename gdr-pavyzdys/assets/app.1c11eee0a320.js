@@ -226,7 +226,9 @@ function santrauka(){
   const R=D.indicators.map(i=>{
     const li=lastIdx(i.vals),v=li>=0&&i.tg>0?i.vals[li]:null,s=iStatus(i,v);
     const next=s.c==="bad"?i.t27:s.c==="ok"?i.t29:null;
-    return {i,v,s,next,metai:s.c==="bad"?2027:2029,
+    // arti tikslo – kaip ketvirtinėje ataskaitoje: nepasiektas, bet nuo 2027 m. tikslo skiriasi ne daugiau nei 10 %
+    const arti=s.c==="bad"&&i.t27?Math.abs(v-i.t27)/Math.abs(i.t27)<=0.10:false;
+    return {i,v,s,arti,next,metai:s.c==="bad"?2027:2029,
       stake:s.c==="bad"?i.galima:s.c==="ok"?i.galima29-i.galima:0,
       k:next!=null?kiekIki(i,i.tg,v,next):null,p:geriauNei(i,v),tr:v==null?null:kaita(i)};
   });
@@ -260,17 +262,31 @@ function santrauka(){
 
   // rodiklių lentelė
   const q=D.quarters.filter((x,n)=>D.indicators.some(i=>i.vals[n]!=null));
-  $("sumsNote").textContent=`kaita – nuo ${q[0]} iki ${q[q.length-1]}; „šalyje“ – kurią įstaigų dalį lenkiate (be įstaigų, kurių tikslinė grupė mažesnė nei ${MIN_TG_SALYJE})`;
+  $("sumsNote").textContent=`kaita – nuo ${q[0]} iki ${q[q.length-1]}, brūkšnys – 2027 m. tikslas; „šalyje“ – kurią įstaigų dalį lenkiate (be įstaigų, kurių tikslinė grupė mažesnė nei ${MIN_TG_SALYJE})`;
+  // keturių ketvirčių kaitos grafikas (kaip ketvirtinėje ataskaitoje): linijos spalva – gerėja / blogėja / stabilu
+  const spark=x=>{
+    const {i}=x,pv=i.vals.map((v,k)=>({v,k})).filter(o=>o.v!=null),W=92,H=30,n=i.vals.length;
+    const all=pv.map(o=>o.v).concat(i.t27!=null?[i.t27]:[]),lo=Math.min(...all),hi=Math.max(...all),pad=(hi-lo||1)*.18;
+    const X=k=>6+k*(W-12)/Math.max(1,n-1),Y=v=>H-4-(v-lo+pad)/(hi-lo+2*pad)*(H-8);
+    const col=x.tr.kr==="gerėja"?"#009870":x.tr.kr==="blogėja"?"#B3261E":"#8A87A8";
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true">`
+      +(i.t27!=null?`<line x1="2" x2="${W-2}" y1="${Y(i.t27)}" y2="${Y(i.t27)}" stroke="#8A87A8" stroke-width=".8" stroke-dasharray="3 2"/>`:"")
+      +`<polyline points="${pv.map(o=>X(o.k).toFixed(1)+","+Y(o.v).toFixed(1)).join(" ")}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round"/>`
+      +pv.map((o,k)=>`<circle cx="${X(o.k)}" cy="${Y(o.v)}" r="${k===pv.length-1?3:1.6}" fill="${col}"/>`).join("")+`</svg>`;
+  };
+  const busena=x=>x.arti?`<span class="badge near">Arti 2027 m. tikslo</span>`:`<span class="badge ${x.s.c}">${x.s.t}</span>`;
+  // mokėtina suma – iš sumos pasiekus 2027 m. tikslą; pasiekus 2029 m. tikslą mokama 20 % daugiau
+  const moka=x=>`${eur0(x.i.mokama)}${x.s.c==="top"?` <span class="plus">+20 %</span>`:""}<small>iš ${eur0(x.i.galima)}</small>`;
   const sal=p=>p==null?"–":`<svg class="sal" viewBox="0 0 70 14" aria-hidden="true"><rect x="0" y="4" width="70" height="6" rx="3" fill="#E6E4F5"/><circle cx="${7+p*0.56}" cy="7" r="6" fill="#220083" stroke="#fff" stroke-width="2"/></svg><small>geriau nei ${p} % įstaigų</small>`;
   const iki=x=>x.s.c==="top"?`–<small>aukščiausias lygis</small>`:x.k==null?"–"
     :`${nf(x.k)} ${vnt(x.i)}<small>${x.i.lower?"per daug":"trūksta"} iki ${x.metai} m. tikslo</small>`;
-  $("sums").innerHTML=`<tr><th scope="col">Rodiklis</th><th scope="col">Dabar</th><th scope="col">Kaita</th><th scope="col">Iki tikslo</th>`
-    +`<th scope="col">Šalyje</th><th scope="col">Tikslinė grupė</th><th scope="col">Mokėtina suma</th></tr>`
-    +R.map(x=>`<tr><td class="rn">${esc(x.i.name)}<div class="bl"><span class="badge ${x.s.c}">${x.s.t}</span> <small>${x.i.lower?"mažiau – geriau":"daugiau – geriau"}</small></div></td>`
-      +`<td class="k">${fv(x.i,x.v)}</td><td${x.tr&&x.tr.kr!=="stabilu"?` class="${x.tr.kr==="gerėja"?"up":"down"}"`:""}>${x.tr?`${kaitaT(x.i,x.tr.d)}<small>${x.tr.kr}</small>`:"–"}</td>`
-      +`<td>${iki(x)}</td><td class="sl">${sal(x.p)}</td><td class="g">${nf(x.i.tg)}</td>`
-      +`<td class="k">${eur(x.i.mokama)}<small>2027 m. tikslas: ${eur(x.i.galima)}</small><small>2029 m. tikslas: ${eur(x.i.galima29)}</small></td></tr>`).join("")
-    +`<tr class="tot"><td>Iš viso</td><td></td><td></td><td></td><td></td><td class="g">–</td><td>${eur(M)}<small>2027 m. tikslai: ${eur(G27)}</small><small>2029 m. tikslai: ${eur(G29)}</small></td></tr>`;
+  $("sums").innerHTML=`<tr><th scope="col">Rodiklis</th><th scope="col">Dabar</th><th scope="col">Kaita per 4 ketv.</th><th scope="col">Iki tikslo</th>`
+    +`<th scope="col">Šalyje</th><th scope="col">Mokėtina suma</th></tr>`
+    +R.map(x=>`<tr><td class="rn">${esc(x.i.name)}<div class="bl">${busena(x)} <small>${x.i.lower?"mažiau – geriau":"daugiau – geriau"} · n=${nf(x.i.tg)}</small></div></td>`
+      +`<td class="k">${fv(x.i,x.v)}</td>`
+      +`<td class="kt${x.tr&&x.tr.kr!=="stabilu"?(x.tr.kr==="gerėja"?" up":" down"):""}">${x.tr?`${spark(x)}<small>${kaitaT(x.i,x.tr.d)} · ${x.tr.kr}</small>`:"–"}</td>`
+      +`<td>${iki(x)}</td><td class="sl">${sal(x.p)}</td><td class="k">${moka(x)}</td></tr>`).join("")
+    +`<tr class="tot"><td>Iš viso</td><td></td><td></td><td></td><td></td><td>${eur0(M)}<small>iš ${eur0(G27)}</small></td></tr>`;
 
   // prioritetai: artimiausias tikslas (nepasiekusiems – 2027 m., pasiekusiems 2027 m. – 2029 m.), pagal sumą
   const open=R.filter(x=>x.stake>0).sort((a,b)=>b.stake-a.stake).slice(0,3);
