@@ -25,7 +25,6 @@ table.t td{padding:10px 12px;text-align:right;color:#1F2937;background:#fff;whit
 table.t th:first-child,table.t td:first-child{text-align:left;white-space:normal}
 table.t td.g{color:var(--mut)}
 table.t td.k{font-weight:700}
-table.t .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:10px}
 table.t tr.tot td{background:#F3F2FB;color:var(--violet);font-weight:700;border-top:1px solid #210084}
 table.t tr.tot td.g{color:var(--violet)}
 .tw{overflow-x:auto}
@@ -57,7 +56,6 @@ select:focus{outline:2px solid var(--violet)}
 .badge.top{background:#BFE8DB;color:#006B4F}.badge.na{background:#eee;color:#666}
 .big{font-size:44px;font-weight:700;color:var(--violet);margin:16px 0 4px}.big small{font-size:14px;font-weight:400;color:var(--mut);margin-left:10px}
 .panel svg{width:100%;height:auto;display:block}
-table.t th:nth-child(2){text-align:left}
 .lg{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-top:8px;font-size:14px;color:var(--violet)}
 .lg i{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;vertical-align:-2px}
 nav{position:sticky;top:0;z-index:10;display:flex;justify-content:center;margin:0 -24px 14px;padding:10px 24px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px)}
@@ -76,8 +74,34 @@ nav button.active{background:var(--violet);color:#fff;box-shadow:0 2px 6px rgba(
 .tip .n{color:#6B7280;font-style:italic;margin-top:2px}
 svg [data-tip]{cursor:pointer;transition:stroke .1s}
 svg [data-tip]:hover{stroke:#220083;stroke-width:2}
+/* santrauka: sakinys ir juosta, kortelės su dviem reikšmėmis, išplėsta lentelė, prioritetai */
+.apz{border:1px solid var(--line);border-radius:14px;padding:20px 24px;background:var(--lav);margin-bottom:20px}
+.apz p{margin:0 0 14px;font-size:16px;line-height:1.55;color:#1F2937}.apz p b{color:var(--violet)}
+svg.prog{display:block;width:100%;height:26px;overflow:visible;margin:6px 0 10px}
+.pl{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13px;color:#44464B}.pl b{color:var(--violet)}.pl .r{margin-left:auto}
+.pl i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.pl .s1{background:var(--violet)}.pl .s2{width:0;height:14px;border-left:2px dashed #645DC0;border-radius:0}.pl .s3{background:#fff;border:1px solid var(--line)}
+@media(max-width:600px){.pl .r{margin-left:0}}
+.card .dv{display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:8px}
+.card .dv b{font-size:22px;color:var(--violet);white-space:nowrap}.card .dv span{font-size:12px;color:#6B7280;text-align:left}
+.card .dv+.dv b{font-size:17px;color:#645DC0}
+table.rt small{display:block;color:var(--mut);font-size:12px;font-weight:400}
+table.rt td.rn{min-width:280px;font-weight:700;color:var(--violet)}
+table.rt .bl{margin-top:6px;font-weight:400}.rt .bl small{display:inline;margin-left:6px}.rt .badge{font-size:11.5px;padding:3px 9px}
+table.rt td.sl{text-align:left}table.rt td.sl small{margin-top:4px}
+table.rt td.up small{color:var(--ok)}table.rt td.down small{color:var(--bad)}
+table.rt tr.tot small{color:var(--violet)}
+svg.sal{display:block;width:70px;height:14px}
+.pri{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pri .pc{border:1px solid var(--line);border-top:5px solid #645DC0;border-radius:14px;padding:16px 18px;background:#fff}
+.pri .n{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+.pri h3{margin:6px 0 8px;font-size:15px;color:var(--violet);line-height:1.3}
+.pri .eur{font-size:26px;font-weight:700;color:var(--violet)}.pri .eur small{display:block;font-size:12px;font-weight:400;color:#44464B}
+.pri dl{margin:12px 0 0;font-size:13px;line-height:1.45}.pri dt{font-weight:700;color:#44464B;margin-top:8px}.pri dd{margin:0}
+@media(max-width:900px){.pri{grid-template-columns:1fr}}
+.ok-l{list-style:none;padding:0;margin:0}.ok-l li{padding:10px 0;border-bottom:1px solid #E6E4F5;font-size:14px;line-height:1.5}
+.ok-l .badge{font-size:11.5px;padding:3px 9px;margin-right:10px}
 /* Spalvos, anksčiau rašytos style="" atributais (griežta CSP jų neleidžia) – vizualiai tas pats */
-table.t .dot.ok{background:var(--ok)}table.t .dot.bad{background:var(--bad)}table.t .dot.na{background:#BDBDBD}
 .lg i.c-top,.lg i.c-me{background:#220083}.lg i.c-ok{background:#645DC0}.lg i.c-bad{background:#C4A8F5}.lg i.c-peer{background:#B9A3F0}
 /* Šaknies ir 404 puslapiai */
 .notice{max-width:560px;margin:0 auto;text-align:center;font-size:16px;line-height:1.6;color:#1F2937}
@@ -147,9 +171,9 @@ body.noscroll{overflow:hidden}
 nav,noscript,.filters,.bar,.pick,.zb,.zm,.exall,.tip{display:none!important}
 .wrap{max-width:none;padding:0}header{padding-top:0;margin-bottom:20px}
 .page{display:block!important;break-before:page}
-#p-money{break-before:auto}
+#p-santrauka{break-before:auto}
 .page::before{content:attr(data-title);display:block;margin:0 0 16px;font-size:20px;font-weight:700;color:var(--violet)}
-.panel,.ac,.card{box-shadow:none;break-inside:avoid}
+.panel,.ac,.card,.pc{box-shadow:none;break-inside:avoid}
 table.t tr{break-inside:avoid}
 .tw,#ovReit .tw3{overflow:visible}svg.rc{min-width:0}
 }

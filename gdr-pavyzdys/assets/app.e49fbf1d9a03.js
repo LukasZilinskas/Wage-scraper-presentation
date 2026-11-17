@@ -61,21 +61,7 @@ document.addEventListener("mousemove",e=>{
   tipEl.style.left=Math.max(8,x)+"px";tipEl.style.top=Math.max(8,y)+"px";
 });
 $("period").textContent=D.period;
-const galima=D.indicators.reduce((s,i)=>s+i.galima,0);
-const mokama=D.indicators.reduce((s,i)=>s+i.mokama,0);
-const reached=D.indicators.filter(i=>i.mokama>0).length;
-const vertinami=D.indicators.filter(i=>i.tg>0).length;  // rodikliai be tikslinės grupės nevertinami
-const dotC=i=>i.tg>0?(i.mokama>0?"ok":"bad"):"na";
-$("cards").innerHTML=[
- ["Mokėtina ketvirtinė suma",eur(mokama),1],
- ["Galima ketvirtinė suma",eur(galima)],
- ["Realizuota dalis",galima>0?Math.round(mokama/galima*100)+" %":"–"],  // be tikslinės grupės galima suma 0 – dalies nėra
- ["Pasiekti rodikliai",reached+" iš "+vertinami]
-].map(c=>`<div class="card${c[2]?" main":""}"><div class="l">${c[0]}</div><div class="v">${c[1]}</div></div>`).join("");
 const nf=v=>v==null?"–":Number(v).toLocaleString("lt-LT",{maximumFractionDigits:0});
-$("sums").innerHTML=`<tr><th scope="col">Rodiklis</th><th scope="col">Tikslinė grupė</th><th scope="col">Galima suma, €</th><th scope="col">Mokėtina suma, €</th></tr>`
- +D.indicators.map(i=>`<tr><td><span class="dot ${dotC(i)}"></span>${esc(i.name)}</td><td class="g">${nf(i.tg)}</td><td class="g">${eur(i.galima)}</td><td class="k">${eur(i.mokama)}</td></tr>`).join("")
- +`<tr class="tot"><td>Iš viso</td><td class="g">–</td><td class="g">${eur(galima)}</td><td>${eur(mokama)}</td></tr>`;
 
 const fmt=(v,d=2)=>v==null?"–":Number(v).toLocaleString("lt-LT",{minimumFractionDigits:Number.isInteger(v)?0:d,maximumFractionDigits:d});
 const status=(v,t27,t29,low)=>{
@@ -198,6 +184,118 @@ function countryChart(i){
   <text x="${(P.l+W-P.r)/2}" y="${H-12}" font-size="14" text-anchor="middle" fill="#220083">Tikslinės grupės asmenų skaičius</text>
   <text transform="translate(16 ${(P.t+H-P.b)/2}) rotate(-90)" font-size="14" text-anchor="middle" fill="#220083">Rodiklio reikšmė</text></svg>`;
 }
+// ===== Santrauka =====
+// Sumos vienu pagrindu: galima suma pasiekus 2027 m. tikslą (galima, 100 %) ir pasiekus 2029 m. tikslą (galima29, 120 %);
+// mokėtina suma visada lygi 0, galima arba galima29. Todėl gauta dalis rodoma nuo abiejų sumų (nuo 2027 m. sumos gali viršyti 100 %).
+// Apžvalgos logika – kaip ketvirtinėje ataskaitoje vadovui (palyginimas šalyje be mažų įstaigų, „Kur“ be mažų apylinkių).
+const MIN_TG_SALYJE=30,MIN_TG_APYL=20;
+// pirmas žingsnis kiekvienam rodikliui (tie patys tekstai kaip ketvirtinėje ataskaitoje)
+const ZINGSNIS={
+ 1:"Peržiūrėkite šių apylinkių praėjusio ketvirčio hospitalizacijų atvejus ir sutarkite, kuriuos lėtinėmis ligomis sergančius pacientus kviesti aktyviai.",
+ 2:"Sudarykite pacientų, kurių HbA1c per metus netirtas arba viršija tikslinę ribą, sąrašą ir pakvieskite juos vizito.",
+ 3:"Išsiųskite priminimus programos amžiaus pacientams, dar neatlikusiems testo, ir siūlykite testą per planinius vizitus.",
+ 4:"Patikrinkite, ar pacientai gali patekti pas gydytoją tą pačią dieną, ir informuokite apie tai dažnai į skubiąją pagalbą besikreipiančius pacientus.",
+ 5:"Aptarkite antibiotikų skyrimą kvėpavimo takų infekcijoms komandos susirinkime ir palyginkite gydytojų skyrimo dažnį."
+};
+const eur0=v=>Math.round(v).toLocaleString("lt-LT")+" €";
+const proc=(a,b)=>b>0?Math.round(a/b*100)+" %":"–";
+// kiek asmenų trūksta (dalies rodikliai) arba atvejų per daug (rodikliai, skaičiuojami i.per gyventojų) iki tikslo t
+function kiekIki(i,tg,v,t){
+  if(t==null||v==null||!(tg>0))return null;
+  if(i.pct&&!i.lower)return Math.max(0,Math.ceil(t*tg-1e-9)-Math.round(v*tg));
+  return i.per&&i.lower?Math.max(0,Math.ceil((v-t)*tg/i.per-1e-9)):null;
+}
+const vnt=i=>i.pct?"asm.":"atv.";
+// kurią kitų įstaigų dalį lenkia (įstaigos, kurių tikslinė grupė mažesnė nei MIN_TG_SALYJE, neįtraukiamos)
+function geriauNei(i,v){
+  if(v==null)return null;
+  const P=(D.peers[i.nr]||[]).filter(p=>p[0]>=MIN_TG_SALYJE&&p[1]!=null).map(p=>p[1]);
+  return P.length?Math.round(100*P.filter(x=>i.lower?x>v:x<v).length/P.length):null;
+}
+// kaita nuo pirmos iki paskutinės turimos reikšmės; mažiau nei 1 % – stabilu
+function kaita(i){
+  const k=i.vals.map((v,n)=>[v,n]).filter(x=>x[0]!=null);
+  if(k.length<2)return null;
+  const a=k[0][0],d=k[k.length-1][0]-a;
+  return {d,kr:Math.abs(d)/Math.abs(a||1)<0.01?"stabilu":(i.lower?d<0:d>0)?"gerėja":"blogėja"};
+}
+const kaitaT=(i,d)=>(d>0?"+":d<0?"−":"")+(i.pct?Math.abs(d*100).toLocaleString("lt-LT",{minimumFractionDigits:1,maximumFractionDigits:1})+" proc. p."
+  :Math.abs(d).toLocaleString("lt-LT",{minimumFractionDigits:2,maximumFractionDigits:2}));
+function santrauka(){
+  const multiKodai=new Set(Object.values(D.apyl).flat().map(r=>r.pc??"–")).size>1;
+  const R=D.indicators.map(i=>{
+    const li=lastIdx(i.vals),v=li>=0&&i.tg>0?i.vals[li]:null,s=iStatus(i,v);
+    const next=s.c==="bad"?i.t27:s.c==="ok"?i.t29:null;
+    return {i,v,s,next,metai:s.c==="bad"?2027:2029,
+      stake:s.c==="bad"?i.galima:s.c==="ok"?i.galima29-i.galima:0,
+      k:next!=null?kiekIki(i,i.tg,v,next):null,p:geriauNei(i,v),tr:v==null?null:kaita(i)};
+  });
+  const sum=f=>D.indicators.reduce((a,i)=>a+f(i),0),G27=sum(i=>i.galima),G29=sum(i=>i.galima29),M=sum(i=>i.mokama);
+  const pasiekti=D.indicators.filter(i=>i.mokama>0).length,vertinami=D.indicators.filter(i=>i.tg>0).length;
+
+  // sakinys ir juosta
+  const neat=R.filter(x=>x.s.c==="bad").sort((a,b)=>b.i.galima-a.i.galima),dar=neat.reduce((a,x)=>a+x.i.galima,0);
+  let lead;
+  if(!(G27>0))lead="Šį ketvirtį vertinamų rodiklių nėra – nėra tikslinės grupės duomenų.";
+  else{
+    lead=`Šį ketvirtį mokėtina <b>${eur0(M)}</b> – ${proc(M,G27)} sumos, mokamos pasiekus visus 2027 m. tikslus (${eur0(G27)}), `
+      +`ir ${proc(M,G29)} didžiausios galimos sumos (${eur0(G29)}). `;
+    lead+=!neat.length?"Visi vertinami rodikliai pasiekė 2027 m. tikslą."
+      :neat.length===1?`Pasiekę likusio rodiklio „${esc(neat[0].i.name)}“ 2027 m. tikslą, per ketvirtį gautumėte dar <b>${eur0(dar)}</b>.`
+      :`Pasiekę likusių ${neat.length} rodiklių 2027 m. tikslus, per ketvirtį gautumėte dar <b>${eur0(dar)}</b>; didžiausia dalis – rodiklyje „${esc(neat[0].i.name)}“.`;
+  }
+  const bar=G29>0?`<svg class="prog" viewBox="0 0 1000 26" preserveAspectRatio="none" role="img" aria-label="Mokėtina ${eur0(M)} iš ${eur0(G29)} didžiausios galimos sumos">
+    <rect x="0" y="0" width="1000" height="26" rx="6" fill="#fff" stroke="#C9C6EC"/><rect x="0" y="0" width="${Math.min(1000,M/G29*1000)}" height="26" rx="6" fill="#220083"/>
+    <line x1="${G27/G29*1000}" x2="${G27/G29*1000}" y1="-2" y2="28" stroke="#645DC0" stroke-width="3" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/></svg>
+    <div class="pl"><span><i class="s1"></i>Mokėtina <b>${eur0(M)}</b></span><span><i class="s2"></i>Visi 2027 m. tikslai (100 %) <b>${eur0(G27)}</b></span>
+    <span><i class="s3"></i>Visi 2029 m. tikslai (120 %) <b>${eur0(G29)}</b></span><span class="r">Iki didžiausios sumos trūksta: <b>${eur0(G29-M)}</b></span></div>`:"";
+  $("apz").innerHTML=`<p>${lead}</p>${bar}`;
+
+  // kortelės: gauta dalis – nuo abiejų sumų
+  const dv=(v,l)=>`<div class="dv"><b>${v}</b><span>${l}</span></div>`;
+  $("cards").innerHTML=`<div class="card main"><div class="l">Mokėtina ketvirtinė suma</div><div class="v">${eur(M)}</div></div>`
+    +`<div class="card"><div class="l">Galima ketvirtinė suma</div>${dv(eur(G27),"pasiekus visus 2027 m. tikslus")}${dv(eur(G29),"pasiekus visus 2029 m. tikslus (120 %)")}</div>`
+    +`<div class="card"><div class="l">Gauta galimos sumos dalis</div>${dv(proc(M,G27),"2027 m. tikslų sumos")}${dv(proc(M,G29),"didžiausios sumos (2029 m.)")}</div>`
+    +`<div class="card"><div class="l">Pasiekti rodikliai</div><div class="v">${pasiekti} iš ${vertinami}</div></div>`;
+
+  // rodiklių lentelė
+  const q=D.quarters.filter((x,n)=>D.indicators.some(i=>i.vals[n]!=null));
+  $("sumsNote").textContent=`kaita – nuo ${q[0]} iki ${q[q.length-1]}; „šalyje“ – kurią įstaigų dalį lenkiate (be įstaigų, kurių tikslinė grupė mažesnė nei ${MIN_TG_SALYJE})`;
+  const sal=p=>p==null?"–":`<svg class="sal" viewBox="0 0 70 14" aria-hidden="true"><rect x="0" y="4" width="70" height="6" rx="3" fill="#E6E4F5"/><circle cx="${7+p*0.56}" cy="7" r="6" fill="#220083" stroke="#fff" stroke-width="2"/></svg><small>geriau nei ${p} % įstaigų</small>`;
+  const iki=x=>x.s.c==="top"?`–<small>aukščiausias lygis</small>`:x.k==null?"–"
+    :`${nf(x.k)} ${vnt(x.i)}<small>${x.i.lower?"per daug":"trūksta"} iki ${x.metai} m. tikslo</small>`;
+  $("sums").innerHTML=`<tr><th scope="col">Rodiklis</th><th scope="col">Dabar</th><th scope="col">Kaita</th><th scope="col">Iki tikslo</th>`
+    +`<th scope="col">Šalyje</th><th scope="col">Tikslinė grupė</th><th scope="col">Mokėtina suma</th></tr>`
+    +R.map(x=>`<tr><td class="rn">${esc(x.i.name)}<div class="bl"><span class="badge ${x.s.c}">${x.s.t}</span> <small>${x.i.lower?"mažiau – geriau":"daugiau – geriau"}</small></div></td>`
+      +`<td class="k">${fv(x.i,x.v)}</td><td${x.tr&&x.tr.kr!=="stabilu"?` class="${x.tr.kr==="gerėja"?"up":"down"}"`:""}>${x.tr?`${kaitaT(x.i,x.tr.d)}<small>${x.tr.kr}</small>`:"–"}</td>`
+      +`<td>${iki(x)}</td><td class="sl">${sal(x.p)}</td><td class="g">${nf(x.i.tg)}</td>`
+      +`<td class="k">${eur(x.i.mokama)}<small>2027 m. tikslas: ${eur(x.i.galima)}</small><small>2029 m. tikslas: ${eur(x.i.galima29)}</small></td></tr>`).join("")
+    +`<tr class="tot"><td>Iš viso</td><td></td><td></td><td></td><td></td><td class="g">–</td><td>${eur(M)}<small>2027 m. tikslai: ${eur(G27)}</small><small>2029 m. tikslai: ${eur(G29)}</small></td></tr>`;
+
+  // prioritetai: artimiausias tikslas (nepasiekusiems – 2027 m., pasiekusiems 2027 m. – 2029 m.), pagal sumą
+  const open=R.filter(x=>x.stake>0).sort((a,b)=>b.stake-a.stake).slice(0,3);
+  const kortele=(x,n)=>{
+    const {i}=x,c=(D.apyl[i.nr]||[]).filter(r=>r.val!=null&&r.tg>=MIN_TG_APYL).map(r=>({r,g:kiekIki(i,r.tg,r.val,x.next)||0}))
+      .filter(o=>o.g>0).sort((a,b)=>b.g-a.g),viso=c.reduce((a,o)=>a+o.g,0),top=c.slice(0,3),ts=top.reduce((a,o)=>a+o.g,0);
+    const kur=!D.apyl[i.nr]?"Šiam rodikliui apylinkių duomenų nėra."
+      :top.length?top.map((o,k)=>`${esc(o.r.a)}${k?"":" apylinkė"}${multiKodai?` (įstaiga ${esc(o.r.pc??"–")})`:""}: ${nf(o.g)}${k?"":" "+vnt(i)}`).join("; ")
+        +`. Tai ${Math.round(100*ts/viso)} % viso apylinkių atotrūkio.`
+      :"Visos apylinkės (kurių tikslinė grupė ne mažesnė nei "+MIN_TG_APYL+") jau pasiekė šį tikslą.";
+    return `<div class="pc"><div class="n">${n+1} prioritetas</div><h3>${esc(i.name)}</h3>`
+      +`<div class="eur">+${eur0(x.stake)}<small>per ketvirtį pasiekus ${x.metai} m. tikslą</small></div><dl>`
+      +(x.k!=null?`<dt>Kiek</dt><dd>${i.lower?"Sumažinti":"Padidinti"} ${nf(x.k)} ${vnt(i)} (dabar ${fv(i,x.v)}, tikslas ${fv(i,x.next)}).</dd>`:"")
+      +`<dt>Kur</dt><dd>${kur}</dd><dt>Pirmas žingsnis</dt><dd>${ZINGSNIS[i.nr]||"Aptarkite rodiklį komandos susirinkime ir sutarkite vieną konkretų veiksmą."}</dd></dl></div>`;
+  };
+  $("prio").innerHTML=`<div class="thead"><h2>Kur didžiausia nauda kitą ketvirtį</h2><span>surikiuota pagal sumą, kurią atneštų artimiausias tikslas</span></div>`
+    +(open.length?`<div class="pri">${open.map(kortele).join("")}</div>`:`<div class="empty sm">Visi vertinami rodikliai pasiekė 2029 m. tikslą.</div>`);
+
+  // kas pavyko
+  const wins=R.filter(x=>x.s.c==="ok"||x.s.c==="top");
+  $("wins").innerHTML=`<div class="thead"><h2>Kas pavyko</h2></div>`+(wins.length?`<ul class="ok-l">${wins.map(x=>`<li><span class="badge ${x.s.c}">${x.s.t}</span>`
+    +`${esc(x.i.name)}: ${fv(x.i,x.v)}${x.p!=null?` – geriau nei ${x.p} % šalies įstaigų`:""}${x.tr&&x.tr.kr!=="stabilu"?`, rodiklis ${x.tr.kr}`:""}.</li>`).join("")}</ul>`
+    :`<div class="empty sm">Šį ketvirtį 2027 m. tikslų dar nepasiekta.</div>`);
+}
+santrauka();
 // ===== Rodiklio filtras =====
 // Bendras skirtukams „Rodikliai“, „Apylinkių palyginimas“ ir „Palyginimas šalyje“: pasirinkimas viename skirtuke galioja ir kituose.
 // Parinktys imamos iš duomenų; numatyta – visi rodikliai. Rodiklio kortelės pažymėtos data-rod (rodiklio eilės numeris).
