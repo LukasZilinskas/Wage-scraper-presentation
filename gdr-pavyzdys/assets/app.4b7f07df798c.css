@@ -90,7 +90,9 @@ table.rt td{padding-top:8px;padding-bottom:8px}
 table.rt td.rn{min-width:260px;font-weight:700;color:var(--violet)}
 .badge.near{background:#FFF1D6;color:#9A5B00}
 table.rt td.kt{text-align:center}svg.spark{display:block;width:92px;height:30px;margin:0 auto}
-.plus{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:6px;background:#BFE8DB;color:#006B4F;font-size:11px;font-weight:700;vertical-align:1px}
+table.rt td.mk{padding-left:64px}
+table.rt .sm{position:relative;display:inline-block}
+table.rt .sm i{position:absolute;right:100%;top:1px;margin-right:7px;padding:1px 6px;border-radius:6px;background:#BFE8DB;color:#006B4F;font:700 11px Inter,"Segoe UI",Arial,sans-serif;white-space:nowrap}
 table.rt .bl{margin-top:6px;font-weight:400}.rt .bl small{display:inline;margin-left:6px}.rt .badge{font-size:11.5px;padding:3px 9px}
 table.rt td.sl{text-align:left}table.rt td.sl small{margin-top:4px}
 table.rt td.up small{color:var(--ok)}table.rt td.down small{color:var(--bad)}
