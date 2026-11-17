@@ -250,7 +250,7 @@ function santrauka(){
     <rect x="0" y="0" width="1000" height="26" rx="6" fill="#fff" stroke="#C9C6EC"/><rect x="0" y="0" width="${Math.min(1000,M/G29*1000)}" height="26" rx="6" fill="#220083"/>
     <line x1="${G27/G29*1000}" x2="${G27/G29*1000}" y1="-2" y2="28" stroke="#645DC0" stroke-width="3" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/></svg>
     <div class="pl"><span><i class="s1"></i>Mokėtina <b>${eur0(M)}</b></span><span><i class="s2"></i>Visi 2027 m. tikslai (100 %) <b>${eur0(G27)}</b></span>
-    <span><i class="s3"></i>Visi 2029 m. tikslai (120 %) <b>${eur0(G29)}</b></span><span class="r">Iki didžiausios sumos trūksta: <b>${eur0(G29-M)}</b></span></div>`:"";
+    <span><i class="s3"></i>Visi 2029 m. tikslai (120 %) <b>${eur0(G29)}</b></span></div>`:"";
   $("apz").innerHTML=`<p>${lead}</p>${bar}`;
 
   // keturi skaičiai skydelio dešinėje; galima suma ir gauta dalis – nuo abiejų sumų (2027 m. ir didžiausios, 2029 m.)

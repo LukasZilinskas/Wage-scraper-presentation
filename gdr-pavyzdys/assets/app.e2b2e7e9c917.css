@@ -85,10 +85,9 @@ svg [data-tip]:hover{stroke:#220083;stroke-width:2}
 @media(max-width:900px){.apz{grid-template-columns:1fr}}
 @media(max-width:420px){.apz{padding:16px}.apz-r b{font-size:18px}}
 svg.prog{display:block;width:100%;height:26px;overflow:visible;margin:6px 0 10px}
-.pl{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13px;color:#44464B}.pl b{color:var(--violet)}.pl .r{margin-left:auto}
+.pl{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:13px;color:#44464B}.pl b{color:var(--violet)}
 .pl i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .pl .s1{background:var(--violet)}.pl .s2{width:0;height:14px;border-left:2px dashed #645DC0;border-radius:0}.pl .s3{background:#fff;border:1px solid var(--line)}
-@media(max-width:600px){.pl .r{margin-left:0}}
 table.rt small{display:block;color:var(--mut);font-size:12px;font-weight:400}
 table.rt td{padding-top:8px;padding-bottom:8px}
 table.rt td.rn{min-width:260px;font-weight:700;color:var(--violet)}
